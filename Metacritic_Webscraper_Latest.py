@@ -62,12 +62,29 @@ class MetaCriticScraper:
         return page_links_list
     
     
+    
+    # TODO: Make the scraper click the next page and take the links from there. 
 
+    def click_next_page(self):
+        next_page_element = self.driver.find_elements(By.XPATH, '//li[@class="page"]/a')
 
+        page_list = []
 
+        base_url = 'https://www.metacritic.com/browse/games/genre/date/action/all?page=1'
+
+        for element in next_page_element:
+            link_to_next_page = element.get_attribute('href')
+            page_list.append(link_to_next_page)
+
+        # print(page_list)
+        
+        return page_list
+
+            
 
     #TODO: make a method which makes the scraper go to these links
-
+    # This link should help: 
+    # https://pretagteam.com/question/loop-through-links-and-scrape-data-from-resulting-pages-using-selenium-python-duplicate
     def process_page_links(self):
         
         for url in self.collect_page_links():
@@ -75,8 +92,9 @@ class MetaCriticScraper:
 
     
     
-    #TODO: 
-    # def process_website_links(self):
+    #TODO: work on this method after completing the links 
+
+    # def get_information_from_page(self):
 
             
     #         for key,xpath in self.xpaths_dict:
@@ -88,10 +106,7 @@ class MetaCriticScraper:
     #                 self.information_dict.update({[key]: 'Null'})
     #             print(self.information_dict)
     #     return self.information_dict
-
-
-
-    #TODO: collect xpaths from the pages. Store in the init? 
+ 
     
 
     # new syntax for driver.find_elements(By.XPATH, "xpath string")
@@ -100,7 +115,8 @@ new_scraper = MetaCriticScraper()
 new_scraper.choose_game_category()
 new_scraper.choose_genre()
 new_scraper.collect_page_links()
-new_scraper.process_page_links()
+# new_scraper.process_page_links()
+new_scraper.click_next_page()
 
 
     
