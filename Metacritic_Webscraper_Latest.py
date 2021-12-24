@@ -1,4 +1,3 @@
-import urllib.request
 import time 
 from selenium import webdriver 
 from selenium.webdriver.chrome.options import Options
@@ -11,6 +10,20 @@ class MetaCriticScraper:
         self.root = "https://www.metacritic.com/"
         driver.get(self.root)
         self.accept_cookies()
+
+        self.xpaths_dict = {'Title': '//*[@class="hover_none"]', 
+                   'Platform': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/span', 
+                   'Release_Date': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[3]/ul/li[2]/span[2]',
+                   'MetaCritic_Score': '//*[@id="main"]/div/div[1]/div[1]/div[3]/div/div/div[2]/div[1]/div[1]/div/div/a/div',
+                   'User_Score': '//*[@id="main"]/div/div[1]/div[1]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div/a/div',
+                   'Description': '//li[@class="summary_detail product_summary"]' } 
+
+        self.information_dict =  {'Title' : "", 
+                                  'Platform' : "",  
+                                  'Release Date' : "",      
+                                  'MetaCritic Score' : "",      
+                                  'User_Score': "" ,    
+                                  'Description' : ""}
 
 
     def accept_cookies(self): 
@@ -37,28 +50,57 @@ class MetaCriticScraper:
         
     #TODO: make a method which collects the links from each of the items on the page. 
 
-    # def collect_page_links(self):
-    #     page_links_list = []
+    
+    def collect_page_links(self):
+        page_container = self.driver.find_elements(By.XPATH, '//a[@class="title"]')
+        page_links_list = []
 
-    #     for url in page_links_list:
-    #         self.driver.find_elements(By.XPATH, '')
+        for url in page_container:
+            link_to_page = url.get_attribute('href')
+            page_links_list.append(link_to_page)
+        print(page_links_list)
+        return page_links_list
+    
+    
 
 
-    #TODO:  make a method which collects the information from the page
+
+
+    #TODO: make a method which makes the scraper go to these links
+
+    def process_page_links(self):
+        
+        for url in self.collect_page_links():
+            self.driver.get(url)
+
+    
+    
+    #TODO: 
+    # def process_website_links(self):
+
+            
+    #         for key,xpath in self.xpaths_dict:
+    #             try: 
+    #                 web_element = self.driver.find_element(By.XPATH, xpath).text
+    #                 self.information_dict.update({key : web_element})
+
+    #             except:
+    #                 self.information_dict.update({[key]: 'Null'})
+    #             print(self.information_dict)
+    #     return self.information_dict
+
+
 
     #TODO: collect xpaths from the pages. Store in the init? 
-    # xpaths dict = {'Title': '//*[@class="hover_none"]', 
-    #                'Platform': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/span', 
-    #                'Release_Date': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[3]/ul/li[2]/span[2]',
-    #                'MetaCritic_Score': '//*[@id="main"]/div/div[1]/div[1]/div[3]/div/div/div[2]/div[1]/div[1]/div/div/a/div',
-    #                'User_Score': '//*[@id="main"]/div/div[1]/div[1]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div/a/div'
-    #                'Description': ''//li[@class="summary_detail product_summary"]'' } 
+    
 
     # new syntax for driver.find_elements(By.XPATH, "xpath string")
       
 new_scraper = MetaCriticScraper()
 new_scraper.choose_game_category()
 new_scraper.choose_genre()
+new_scraper.collect_page_links()
+new_scraper.process_page_links()
 
 
     
