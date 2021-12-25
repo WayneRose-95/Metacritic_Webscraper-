@@ -108,14 +108,7 @@ class MetaCriticScraper:
     #TODO: work on this method after completing the link functionality. 
 
     def get_information_from_page(self):
-
-            self.xpaths_dict = {'Title': '//*[@class="hover_none"]', 
-                   'Platform': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/span', 
-                   'Release_Date': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[3]/ul/li[2]/span[2]',
-                   'MetaCritic_Score': '//*[@id="main"]/div/div[1]/div[1]/div[3]/div/div/div[2]/div[1]/div[1]/div/div/a/div',
-                   'User_Score': '//*[@id="main"]/div/div[1]/div[1]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div/a/div',
-                   'Description': '//li[@class="summary_detail product_summary"]' } 
-            
+   
             #TODO: This could be a staticmethod? 
             for key,xpath in self.xpaths_dict.items():
                 try: 
@@ -125,7 +118,7 @@ class MetaCriticScraper:
                 except:
                     self.information_dict[key] = 'Null'
 
-            print(self.information_dict)
+            print(f'your information: {self.information_dict}')
             return self.information_dict
  
 
