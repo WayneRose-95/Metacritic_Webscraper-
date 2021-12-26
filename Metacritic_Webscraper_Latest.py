@@ -3,6 +3,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
+#TODO: Go for a sample scrape on a webpage. Output a dictionary. 
+
 class MetaCriticScraper: 
 
     def __init__(self, driver = webdriver.Chrome()):
@@ -70,6 +72,7 @@ class MetaCriticScraper:
 
         page_list = []
 
+        # This line isn't doing anything. Maybe make it 
         base_url = 'https://www.metacritic.com/browse/games/genre/date/action/all?page=1'
 
         for element in next_page_element:
@@ -93,19 +96,22 @@ class MetaCriticScraper:
     
     
     #TODO: work on this method after completing the links 
+    def get_information_from_page(self):
+   
+        #TODO: This could be a staticmethod? 
+        for key,xpath in self.xpaths_dict.items():
+            try:
+                web_element = self.driver.find_element(By.XPATH, xpath) 
+                self.information_dict[key] = web_element.text
 
-    # def get_information_from_page(self):
+            except:
+                self.information_dict[key] = 'Null'
+                
+            finally: 
+                self.information_dict[key] = web_element.text
 
-            
-    #         for key,xpath in self.xpaths_dict:
-    #             try: 
-    #                 web_element = self.driver.find_element(By.XPATH, xpath).text
-    #                 self.information_dict.update({key : web_element})
 
-    #             except:
-    #                 self.information_dict.update({[key]: 'Null'})
-    #             print(self.information_dict)
-    #     return self.information_dict
+            print(f'First Dictionary: {self.information_dict}')
  
     
 
@@ -115,8 +121,8 @@ new_scraper = MetaCriticScraper()
 new_scraper.choose_game_category()
 new_scraper.choose_genre()
 new_scraper.collect_page_links()
-# new_scraper.process_page_links()
-new_scraper.click_next_page()
-
+new_scraper.process_page_links()
+new_scraper.get_information_from_page()
+# new_scraper.click_next_page()
 
     
