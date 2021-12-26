@@ -19,19 +19,14 @@ class MetaCriticScraper:
         self.accept_cookies()
         self.page_counter = 0
 
-        self.xpaths_dict = {'Title': '//*[@class="hover_none"]', 
+        self.xpaths_dict = {'Title': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/a/h1', 
                    'Platform': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/span', 
                    'Release_Date': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[3]/ul/li[2]/span[2]',
                    'MetaCritic_Score': '//*[@id="main"]/div/div[1]/div[1]/div[3]/div/div/div[2]/div[1]/div[1]/div/div/a/div',
-                   'User_Score': '//*[@id="main"]/div/div[1]/div[1]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div/a/div',
+                   'User_Score': '//*[@id="main"]/div/div[1]/div[1]/div[3]/div/div/div[2]/div[1]/div[2]/div[1]/div/a/div',
                    'Description': '//li[@class="summary_detail product_summary"]' } 
 
-        self.information_dict =  {'Title' : None, 
-                                  'Platform' : None,  
-                                  'Release Date' : None,      
-                                  'MetaCritic Score' : None,      
-                                  'User_Score': None ,    
-                                  'Description' : None}
+        self.information_dict =  {}
 
 
     def accept_cookies(self): 
@@ -111,16 +106,21 @@ class MetaCriticScraper:
    
             #TODO: This could be a staticmethod? 
             for key,xpath in self.xpaths_dict.items():
-                try: 
-                    web_element = self.driver.find_element(By.XPATH, xpath)
+                try:
+                    web_element = self.driver.find_element(By.XPATH, xpath) 
                     self.information_dict[key] = web_element.text
 
                 except:
                     self.information_dict[key] = 'Null'
+                
+                finally: 
+                    self.information_dict[key] = web_element.text
 
-            print(f'your information: {self.information_dict}')
-            return self.information_dict
- 
+
+            print(f'First Dictionary: {self.information_dict}')
+            
+          
+
 
     # new syntax for driver.find_elements(By.XPATH, "xpath string")
       
@@ -130,6 +130,7 @@ new_scraper = MetaCriticScraper()
 # new_scraper.collect_page_links()
 # new_scraper.process_page_links()
 new_scraper.get_information_from_page()
+
 
 
 
