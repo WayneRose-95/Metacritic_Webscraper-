@@ -11,7 +11,7 @@ class MetaCriticScraper:
     def __init__(self, driver = webdriver.Chrome()):
         self.driver = driver 
         # Temporary change in root to debug collecting information from the page. Original root =  "https://www.metacritic.com/"
-        self.root = "https://www.metacritic.com/game/wii-u/super-smash-bros-for-wii-u"
+        self.root = "https://www.metacritic.com/"
         driver.get(self.root)
         self.accept_cookies()
         self.page_counter = 0
@@ -86,19 +86,8 @@ class MetaCriticScraper:
         return page_list
          
 
-    #TODO: make a method which makes the scraper go to these links
-    # This link should help: 
-    # https://pretagteam.com/question/loop-through-links-and-scrape-data-from-resulting-pages-using-selenium-python-duplicate
-    def process_page_links(self):
-        
-        for url in self.collect_page_links():
-            self.driver.get(url)
-
-        
-      
-    
-    
     #TODO: work on this method after completing the links 
+
     def get_information_from_page(self):
    
         #TODO: This could be a staticmethod? 
@@ -113,19 +102,43 @@ class MetaCriticScraper:
             finally: 
                 self.information_dict[key] = web_element.text
 
+        print(self.information_dict)
+        return self.information_dict
 
-            print(f'First Dictionary: {self.information_dict}')
- 
     
+    #TODO: make a method which makes the scraper go to these links
+    # This link should help: 
+    # https://pretagteam.com/question/loop-through-links-and-scrape-data-from-resulting-pages-using-selenium-python-duplicate
 
-    # new syntax for driver.find_elements(By.XPATH, "xpath string")
+    def process_page_links(self):
+        
+    
+        for url in self.collect_page_links():
+            self.driver.get(url)
+           
+       
+
+    def sample_scraper(self):
+        # Goes to Games > Games Home > 'Search by Genre': Action > Scrapes the first page. 
+        self.choose_game_category()
+        self.choose_genre()
+
+        for url in self.collect_page_links():
+           self.driver.get(url)
+           self.get_information_from_page()
+        
+        
+    
+        
+        
+       # new syntax for driver.find_elements(By.XPATH, "xpath string")
       
 new_scraper = MetaCriticScraper()
-new_scraper.choose_game_category()
-new_scraper.choose_genre()
-new_scraper.collect_page_links()
-new_scraper.process_page_links()
-new_scraper.get_information_from_page()
+# new_scraper.choose_game_category()
+# new_scraper.choose_genre()
+# new_scraper.collect_page_links()
+# new_scraper.get_information_from_page()
+new_scraper.sample_scraper()
 # new_scraper.click_next_page()
 
     
