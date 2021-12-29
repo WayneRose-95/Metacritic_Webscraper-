@@ -99,8 +99,7 @@ class MetaCriticScraper:
             except:
                 self.information_dict[key] = 'Null'
                 
-            finally: 
-                self.information_dict[key] = web_element.text
+           
 
         print(self.information_dict)
         return self.information_dict
