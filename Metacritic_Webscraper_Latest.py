@@ -14,7 +14,7 @@ class MetaCriticScraper:
         # Good game root = "https://www.metacritic.com/game/xbox/halo-combat-evolved"
         # Bad game root = "https://www.metacritic.com/game/gamecube/charlies-angels"
         # Mixed game root = "https://www.metacritic.com/game/pc/white-shadows"
-        self.root = "https://www.metacritic.com/game/gamecube/charlies-angels"
+        self.root = "https://www.metacritic.com/"
         driver.get(self.root)
         self.accept_cookies()
         self.page_counter = 0
@@ -24,7 +24,7 @@ class MetaCriticScraper:
                    'Release_Date': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[3]/ul/li[2]/span[2]',
                    'MetaCritic_Score': '//a[@class="metascore_anchor"]/div', 
                    'User_Score': '//div[@class="userscore_wrap feature_userscore"]/a/div', 
-                   'Description': '//li[@class="summary_detail product_summary"]' } 
+                   'Description':  '//li[@class="summary_detail product_summary"]' } 
 
         self.information_dict =  {}
 
@@ -107,7 +107,6 @@ class MetaCriticScraper:
         return self.information_dict
 
 
-
     #TODO: make a method which makes the scraper go to these links
     # This link should help: 
     # https://pretagteam.com/question/loop-through-links-and-scrape-data-from-resulting-pages-using-selenium-python-duplicate
@@ -139,8 +138,8 @@ new_scraper = MetaCriticScraper()
 # new_scraper.choose_game_category()
 # new_scraper.choose_genre()
 # new_scraper.collect_page_links()
-new_scraper.get_information_from_page()
-# new_scraper.sample_scraper()
+# new_scraper.get_information_from_page()
+new_scraper.sample_scraper()
 # new_scraper.click_next_page()
 
     
