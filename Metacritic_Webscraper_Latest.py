@@ -11,6 +11,9 @@ class MetaCriticScraper:
     def __init__(self, driver = webdriver.Chrome()):
         self.driver = driver 
         # Temporary change in root to debug collecting information from the page. Original root =  "https://www.metacritic.com/"
+        # Good game root = "https://www.metacritic.com/game/xbox/halo-combat-evolved"
+        # Bad game root = "https://www.metacritic.com/game/gamecube/charlies-angels"
+        # Mixed game root = "https://www.metacritic.com/game/pc/white-shadows"
         self.root = "https://www.metacritic.com/"
         driver.get(self.root)
         self.accept_cookies()
@@ -19,9 +22,9 @@ class MetaCriticScraper:
         self.xpaths_dict = {'Title': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/a/h1', 
                    'Platform': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/span', 
                    'Release_Date': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[3]/ul/li[2]/span[2]',
-                   'MetaCritic_Score': '//*[@id="main"]/div/div[1]/div[1]/div[3]/div/div/div[2]/div[1]/div[1]/div/div/a/div',
-                   'User_Score': '//*[@id="main"]/div/div[1]/div[1]/div[3]/div/div/div[2]/div[1]/div[2]/div[1]/div/a/div',
-                   'Description': '//li[@class="summary_detail product_summary"]' } 
+                   'MetaCritic_Score': '//a[@class="metascore_anchor"]/div', 
+                   'User_Score': '//div[@class="userscore_wrap feature_userscore"]/a/div', 
+                   'Description':  '//li[@class="summary_detail product_summary"]' } 
 
         self.information_dict =  {}
 
@@ -95,16 +98,15 @@ class MetaCriticScraper:
             try:
                 web_element = self.driver.find_element(By.XPATH, xpath) 
                 self.information_dict[key] = web_element.text
+                
 
             except:
                 self.information_dict[key] = 'Null'
-                
-           
 
         print(self.information_dict)
         return self.information_dict
 
-    
+
     #TODO: make a method which makes the scraper go to these links
     # This link should help: 
     # https://pretagteam.com/question/loop-through-links-and-scrape-data-from-resulting-pages-using-selenium-python-duplicate
