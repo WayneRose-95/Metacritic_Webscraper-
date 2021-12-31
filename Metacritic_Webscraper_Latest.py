@@ -1,4 +1,5 @@
 import time 
+from time import perf_counter
 import selenium
 from selenium import webdriver 
 from selenium.webdriver.chrome.options import Options
@@ -14,7 +15,7 @@ class MetaCriticScraper:
         # Good game root = "https://www.metacritic.com/game/xbox/halo-combat-evolved"
         # Bad game root = "https://www.metacritic.com/game/gamecube/charlies-angels"
         # Mixed game root = "https://www.metacritic.com/game/pc/white-shadows"
-        self.root = "https://www.metacritic.com/game/xbox/halo-combat-evolved"
+        self.root = "https://www.metacritic.com/"
         driver.get(self.root)
         self.accept_cookies()
         self.page_counter = 0
@@ -144,8 +145,14 @@ new_scraper = MetaCriticScraper()
 # new_scraper.choose_game_category()
 # new_scraper.choose_genre()
 # new_scraper.collect_page_links()
-new_scraper.get_information_from_page()
-# new_scraper.sample_scraper()
+# new_scraper.get_information_from_page()
 # new_scraper.click_next_page()
 
+# Timing how long it takes to scrape from 100 pages 
+t1_start = perf_counter()
+new_scraper.sample_scraper()
+t1_stop = perf_counter()
+print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
+
+# Current stats: 100 pages in 226 seconds (2 minutes, 4 seconds.)
     
