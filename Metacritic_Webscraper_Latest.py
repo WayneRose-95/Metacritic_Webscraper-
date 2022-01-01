@@ -73,6 +73,10 @@ class MetaCriticScraper:
     
     
     # TODO: Make the scraper click the next page and take the links from there. 
+    # Try these links out: 
+    # https://stackoverflow.com/questions/56019749/python-web-scraping-how-to-loop-all-pages-next-page
+    # https://stackoverflow.com/questions/55005839/python-web-scraping-using-selenium-clicking-on-next-page
+    # 
 
     def click_next_page(self):
         next_page_element = self.driver.find_elements(By.XPATH, '//li[@class="page_num"]')
