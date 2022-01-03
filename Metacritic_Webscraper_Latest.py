@@ -15,7 +15,8 @@ class MetaCriticScraper:
         # Good game root = "https://www.metacritic.com/game/xbox/halo-combat-evolved"
         # Bad game root = "https://www.metacritic.com/game/gamecube/charlies-angels"
         # Mixed game root = "https://www.metacritic.com/game/pc/white-shadows"
-        self.root = "https://www.metacritic.com/"
+        # Sample page root = "https://www.metacritic.com/browse/games/genre/date/fighting/all"
+        self.root = "https://www.metacritic.com/browse/games/genre/date/fighting/all"
         driver.get(self.root)
         self.accept_cookies()
         self.page_counter = 0
@@ -76,30 +77,24 @@ class MetaCriticScraper:
     # Try these links out: 
     # https://stackoverflow.com/questions/56019749/python-web-scraping-how-to-loop-all-pages-next-page
     # https://stackoverflow.com/questions/55005839/python-web-scraping-using-selenium-clicking-on-next-page
-    # 
+    # https://www.google.com/search?q=python+selenium+scrape+next+pages&rlz=1C1VDKB_en-GBGB964GB964&oq=python+selenium+scrape+next+pages+&aqs=chrome..69i57j33i22i29i30l3.5678j1j7&sourceid=chrome&ie=UTF-8
 
     def click_next_page(self):
-        next_page_element = self.driver.find_elements(By.XPATH, '//li[@class="page_num"]')
 
-        page_list = []
-
-        # This line isn't doing anything. Maybe make it 
-        base_url = 'https://www.metacritic.com/browse/games/genre/date/action/all?page=1'
-
-        for element in next_page_element:
-            link_to_next_page = element.get_attribute('href')
-            page_list.append(link_to_next_page)
-
-        print(page_list)
-        
-        return page_list
+        # iterate over pages 2 to 7.
+        #TODO: find a way to generalise this code for all pages on the website. Maybe make another method to check the last page? 
+        for i in range(2,7):
+            next_page_element = self.driver.find_element(By.XPATH, f'//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[{i}]/a')
+            next_page_url = next_page_element.get_attribute('href')
+            self.driver.get(next_page_url)
+            print(next_page_url)
+            print('navigating to next page')
+            pass
          
 
     #TODO: work on this method after completing the links 
 
-    def get_information_from_page(self):
-
-        
+    def get_information_from_page(self):   
    
         #TODO: This could be a staticmethod? 
         for key,xpath in self.xpaths_dict.items():
@@ -109,7 +104,6 @@ class MetaCriticScraper:
                 web_element = self.driver.find_element(By.XPATH, xpath) 
                 self.information_dict[key] = web_element.text
                 
-
             except:
                 
                 self.information_dict[key] = 'Null'
@@ -124,10 +118,10 @@ class MetaCriticScraper:
 
     def process_page_links(self):
         
-    
+
         for url in self.collect_page_links():
             self.driver.get(url)
-           
+         
        
 
     def sample_scraper(self):
@@ -139,9 +133,7 @@ class MetaCriticScraper:
            self.driver.get(url)
            self.get_information_from_page()
         
-        
-    
-        
+                
         
        # new syntax for driver.find_elements(By.XPATH, "xpath string")
       
@@ -150,13 +142,14 @@ new_scraper = MetaCriticScraper()
 # new_scraper.choose_genre()
 # new_scraper.collect_page_links()
 # new_scraper.get_information_from_page()
-# new_scraper.click_next_page()
+new_scraper.click_next_page()
+# new_scraper.process_page_links()
 
 # Timing how long it takes to scrape from 100 pages 
-t1_start = perf_counter()
-new_scraper.sample_scraper()
-t1_stop = perf_counter()
-print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
+# t1_start = perf_counter()
+# new_scraper.sample_scraper()
+# t1_stop = perf_counter()
+# print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
 
 # Current stats: 100 pages in 226 seconds (2 minutes, 4 seconds.)
     
