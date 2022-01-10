@@ -89,10 +89,16 @@ class MetaCriticScraper:
             self.driver.get(next_page_url)
             print(next_page_url)
             print('navigating to next page')
-            pass
-         
 
-    #TODO: work on this method after completing the links 
+        return next_page_url
+         
+    def last_page(self):
+        last_page_element = self.driver.find_element(By.XPATH, '//li[@class="page last_page"]/a' )
+        last_page_url = last_page_element.get_attribute('href')
+        self.driver.get(last_page_url)
+        return last_page_url 
+
+    
 
     def get_information_from_page(self):   
    
@@ -142,7 +148,8 @@ new_scraper = MetaCriticScraper()
 # new_scraper.choose_genre()
 # new_scraper.collect_page_links()
 # new_scraper.get_information_from_page()
-new_scraper.click_next_page()
+# new_scraper.click_next_page()
+new_scraper.last_page()
 # new_scraper.process_page_links()
 
 # Timing how long it takes to scrape from 100 pages 
