@@ -159,13 +159,13 @@ class MetaCriticScraper:
 
         for page in range(2,7):
             all_pages_list.extend(self.collect_page_links())
-            
+            time.sleep(1)
             self.click_next_page(page)
 
 
         for url in all_pages_list:
            self.driver.get(url)
-           time.sleep(1)
+           time.sleep(2)
            self.get_information_from_page()
         
         
@@ -190,5 +190,5 @@ new_scraper.sample_scraper()
 t1_stop = perf_counter()
 print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
 
-# Current stats: 100 pages in 226 seconds (2 minutes, 4 seconds.)
-    
+# Current stats(1/01/2022): 100 pages in 226 seconds (2 minutes, 4 seconds.)
+# Current stats(27/01/2022): 500 pages in 2828 seconds (47 minutes, 8 seconds)
