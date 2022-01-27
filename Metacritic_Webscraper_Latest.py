@@ -17,7 +17,7 @@ class MetaCriticScraper:
         # Mixed game root = "https://www.metacritic.com/game/pc/white-shadows"
         # Sample page root = "https://www.metacritic.com/browse/games/genre/date/fighting/all"
         # Sample page root short description = "https://www.metacritic.com/game/ios/the-king-of-fighters-97"
-        self.root = "https://www.metacritic.com/game/ios/the-king-of-fighters-97"
+        self.root = "https://www.metacritic.com/"
         driver.get(self.root)
         self.accept_cookies()
         self.page_counter = 0
@@ -50,9 +50,9 @@ class MetaCriticScraper:
     # TODO: make a method which chooses the genre from the homepage. 
 
     def choose_genre(self):
-        choose_action_genre = self.driver.find_element(By.XPATH, '//*[@id="main"]/div[4]/div/div[2]/div[2]/div[1]/div/div/div/ul/li[1]/a').get_attribute("href")
-        action_genre_url = print(choose_action_genre)
-        self.driver.get(choose_action_genre)
+        choose_fighting_genre = self.driver.find_element(By.XPATH, '//*[@id="main"]/div[4]/div/div[2]/div[2]/div[1]/div/div/div/ul/li[3]/a').get_attribute("href")
+        action_genre_url = print(choose_fighting_genre)
+        self.driver.get(choose_fighting_genre)
         return action_genre_url
         
     #TODO: make a method which collects the links from each of the items on the page. 
@@ -80,21 +80,22 @@ class MetaCriticScraper:
     # https://stackoverflow.com/questions/55005839/python-web-scraping-using-selenium-clicking-on-next-page
     # https://www.google.com/search?q=python+selenium+scrape+next+pages&rlz=1C1VDKB_en-GBGB964GB964&oq=python+selenium+scrape+next+pages+&aqs=chrome..69i57j33i22i29i30l3.5678j1j7&sourceid=chrome&ie=UTF-8
 
-    def click_next_page(self):
+    def click_next_page(self, page):
 
         # iterate over pages 2 to 7.
         #TODO: find a way to generalise this code for all pages on the website. Maybe make another method to check the last page? 
-        for i in range(2,7):
-            next_page_element = self.driver.find_element(By.XPATH, f'//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[{i}]/a')
-            next_page_url = next_page_element.get_attribute('href')
-            self.driver.get(next_page_url)
-            print(next_page_url)
-            print('navigating to next page')
+    
+        next_page_element = self.driver.find_element(By.XPATH, f'//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[{page}]/a')
+        next_page_url = next_page_element.get_attribute('href')
+        self.driver.get(next_page_url)
+        print(next_page_url)
+        print('navigating to next page')
 
         return next_page_url
          
     def last_page(self):
         last_page_element = self.driver.find_element(By.XPATH, '//li[@class="page last_page"]/a' )
+        # '//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[6]'
         last_page_url = last_page_element.get_attribute('href')
         self.driver.get(last_page_url)
         return last_page_url 
@@ -128,6 +129,12 @@ class MetaCriticScraper:
         print(self.information_dict)
         return self.information_dict
 
+        # if conditionA:
+            # Code that executes when 'conditionA' is True
+
+            # if conditionB:
+                # Code that runs when 'conditionA' and
+                # 'conditionB' are both True
 
     #TODO: make a method which makes the scraper go to these links
     # This link should help: 
@@ -142,15 +149,29 @@ class MetaCriticScraper:
        
 
     def sample_scraper(self):
-        # Goes to Games > Games Home > 'Search by Genre': Action > Scrapes the first page. 
+        # Goes to Games > Games Home > 'Search by Genre': Fighting > Scrapes the first page. 
         self.choose_game_category()
         self.choose_genre()
 
-        for url in self.collect_page_links():
+        root_page = "https://www.metacritic.com/game"
+
+        all_pages_list = []
+
+        for page in range(2,7):
+            all_pages_list.extend(self.collect_page_links())
+            
+            self.click_next_page(page)
+
+
+        for url in all_pages_list:
            self.driver.get(url)
+           time.sleep(1)
            self.get_information_from_page()
         
-                
+        
+        
+
+
         
        # new syntax for driver.find_elements(By.XPATH, "xpath string")
       
@@ -158,16 +179,16 @@ new_scraper = MetaCriticScraper()
 # new_scraper.choose_game_category()
 # new_scraper.choose_genre()
 # new_scraper.collect_page_links()
-new_scraper.get_information_from_page()
+# new_scraper.get_information_from_page()
 # new_scraper.click_next_page()
 # new_scraper.last_page()
 # new_scraper.process_page_links()
 
 # Timing how long it takes to scrape from 100 pages 
-# t1_start = perf_counter()
-# new_scraper.sample_scraper()
-# t1_stop = perf_counter()
-# print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
+t1_start = perf_counter()
+new_scraper.sample_scraper()
+t1_stop = perf_counter()
+print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
 
 # Current stats: 100 pages in 226 seconds (2 minutes, 4 seconds.)
     
