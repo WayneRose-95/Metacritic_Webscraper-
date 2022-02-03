@@ -17,7 +17,7 @@ class MetaCriticScraper:
         # Mixed game root = "https://www.metacritic.com/game/pc/white-shadows"
         # Sample page root = "https://www.metacritic.com/browse/games/genre/date/fighting/all"
         # Sample page root short description = "https://www.metacritic.com/game/ios/the-king-of-fighters-97"
-        self.root = "https://www.metacritic.com/"
+        self.root = "https://www.metacritic.com"
         driver.get(self.root)
         self.accept_cookies()
         self.page_counter = 0
@@ -59,6 +59,7 @@ class MetaCriticScraper:
 
     
     def collect_page_links(self):
+        #TODO: Try find_elements(By.CSS_SELECTOR)
         page_container = self.driver.find_elements(By.XPATH, '//a[@class="title"]')
         page_links_list = []
 
@@ -85,23 +86,44 @@ class MetaCriticScraper:
         # iterate over pages 2 to 7.
         #TODO: find a way to generalise this code for all pages on the website. Maybe make another method to check the last page? 
     
-        next_page_element = self.driver.find_element(By.XPATH, f'//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[{page}]/a')
+        next_page_element = self.driver.find_element(By.XPATH, f'//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[{page}]/*')
         next_page_url = next_page_element.get_attribute('href')
         self.driver.get(next_page_url)
         print(next_page_url)
         print('navigating to next page')
 
         return next_page_url
-         
+
+    # New page switching method. 
+    # Now generalises page switching for all pages using a while loop
+    def click_next_page_2(self):
+        next_page_flipper_button = self.driver.find_element(By.XPATH, '//a[@class="action"]').get_attribute("href")
+        while True: 
+            try: 
+                next_page_flipper_button.click()
+                print('navigating to next page')
+            except:
+                print('no more buttons')
+                break
+        
+        
+
+    #TODO: generalise this last page method to find the last page of all gaming sections  
     def last_page(self):
-        last_page_element = self.driver.find_element(By.XPATH, '//li[@class="page last_page"]/a' )
+        last_page_url = 'https://www.metacritic.com/browse/games/genre/date/fighting/all?page=5'
         # '//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[6]'
-        last_page_url = last_page_element.get_attribute('href')
         self.driver.get(last_page_url)
-        return last_page_url 
+        self.collect_page_links()
+
+        for url in self.collect_page_links():
+            self.driver.get(url)
+            time.sleep(2)
+            self.get_information_from_page()
+        return self.information_dict
 
     
-
+    #TODO: Bug. Description scrapes extended descriptions, but not unextended descriptions
+    
     def get_information_from_page(self):   
         
     
@@ -149,7 +171,7 @@ class MetaCriticScraper:
        
 
     def sample_scraper(self):
-        # Goes to Games > Games Home > 'Search by Genre': Fighting > Scrapes the first page. 
+        # Goes to Games > Games Home > 'Search by Genre': Fighting > Scrapes 5 pages of content 
         self.choose_game_category()
         self.choose_genre()
 
@@ -160,7 +182,7 @@ class MetaCriticScraper:
         for page in range(2,7):
             all_pages_list.extend(self.collect_page_links())
             time.sleep(1)
-            self.click_next_page(page)
+            self.click_next_page_2()
 
 
         for url in all_pages_list:
@@ -168,8 +190,7 @@ class MetaCriticScraper:
            time.sleep(2)
            self.get_information_from_page()
         
-        
-        
+        self.last_page()
 
 
         
@@ -181,6 +202,7 @@ new_scraper = MetaCriticScraper()
 # new_scraper.collect_page_links()
 # new_scraper.get_information_from_page()
 # new_scraper.click_next_page()
+# new_scrpaer.click_next_page_2()
 # new_scraper.last_page()
 # new_scraper.process_page_links()
 
@@ -192,3 +214,4 @@ print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
 
 # Current stats(1/01/2022): 100 pages in 226 seconds (2 minutes, 4 seconds.)
 # Current stats(27/01/2022): 500 pages in 2828 seconds (47 minutes, 8 seconds)
+# Current stats (3/02/2022): 524 pages in 1742 seconds (29 minutes)
