@@ -1,19 +1,21 @@
 import time 
 from time import perf_counter
 import selenium
-from selenium import webdriver 
+# from selenium import webdriver 
 from selenium.webdriver import Chrome
-from selenium.webdriver.chrome.options import Options
+# from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.service import Service
+from selenium.common.exceptions import TimeoutException
 
 #TODO: Go for a sample scrape on a webpage. Output a dictionary. 
 
 class MetaCriticScraper: 
 
     def __init__(self, driver = Chrome(ChromeDriverManager().install())):
-        self.driver = driver 
+        self.driver = driver
+        
+
         # Temporary change in root to debug collecting information from the page. Original root =  "https://www.metacritic.com/"
         # Good game root = "https://www.metacritic.com/game/xbox/halo-combat-evolved"
         # Bad game root = "https://www.metacritic.com/game/gamecube/charlies-angels"
@@ -22,7 +24,16 @@ class MetaCriticScraper:
         # Sample page root short description = "https://www.metacritic.com/game/playstation-3/divekick"
         # Sample page root long description = "https://www.metacritic.com/game/pc/mortal-kombat-komplete-edition"
         self.root = "https://www.metacritic.com/"
-        driver.get(self.root)
+        try:
+            driver.set_page_load_timeout(30)
+            driver.get(self.root)
+        except TimeoutException as ex:
+            isrunning = 0
+            print("Exception has been thrown. " + str(ex))
+            driver.close()
+
+        
+        # driver.get(self.root)
         self.accept_cookies()
         self.page_counter = 0
 
@@ -196,10 +207,11 @@ class MetaCriticScraper:
         for page in range(2,7):
             all_pages_list.extend(self.collect_page_links())
             time.sleep(1)
-            self.click_next_page_2()
+            self.click_next_page(page)
 
 
         for url in all_pages_list:
+           time.sleep(1)
            self.driver.get(url)
            time.sleep(2)
            self.get_information_from_page()
