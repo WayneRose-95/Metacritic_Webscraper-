@@ -21,7 +21,7 @@ class MetaCriticScraper:
         # Sample page root = "https://www.metacritic.com/browse/games/genre/date/fighting/all"
         # Sample page root short description = "https://www.metacritic.com/game/playstation-3/divekick"
         # Sample page root long description = "https://www.metacritic.com/game/pc/mortal-kombat-komplete-edition"
-        self.root = "https://www.metacritic.com/game/playstation-3/divekick"
+        self.root = "https://www.metacritic.com/"
         driver.get(self.root)
         self.accept_cookies()
         self.page_counter = 0
@@ -55,9 +55,9 @@ class MetaCriticScraper:
 
     def choose_genre(self):
         choose_fighting_genre = self.driver.find_element(By.XPATH, '//*[@id="main"]/div[4]/div/div[2]/div[2]/div[1]/div/div/div/ul/li[3]/a').get_attribute("href")
-        action_genre_url = print(choose_fighting_genre)
+        fighting_genre_url = print(choose_fighting_genre)
         self.driver.get(choose_fighting_genre)
-        return action_genre_url
+        return fighting_genre_url
         
     #TODO: make a method which collects the links from each of the items on the page. 
 
@@ -126,7 +126,7 @@ class MetaCriticScraper:
         return self.information_dict
 
     
-    #TODO: Bug. Description scrapes extended descriptions, but not unextended descriptions
+    
     
     def get_information_from_page(self):   
         
@@ -214,17 +214,17 @@ new_scraper = MetaCriticScraper()
 # new_scraper.choose_game_category()
 # new_scraper.choose_genre()
 # new_scraper.collect_page_links()
-new_scraper.get_information_from_page()
+# new_scraper.get_information_from_page()
 # new_scraper.click_next_page()
 # new_scrpaer.click_next_page_2()
 # new_scraper.last_page()
 # new_scraper.process_page_links()
 
 # Timing how long it takes to scrape from 100 pages 
-# t1_start = perf_counter()
-# new_scraper.sample_scraper()
-# t1_stop = perf_counter()
-# print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
+t1_start = perf_counter()
+new_scraper.sample_scraper()
+t1_stop = perf_counter()
+print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
 
 # Current stats(1/01/2022): 100 pages in 226 seconds (2 minutes, 4 seconds.)
 # Current stats(27/01/2022): 500 pages in 2828 seconds (47 minutes, 8 seconds)
