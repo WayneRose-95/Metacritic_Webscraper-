@@ -2,22 +2,26 @@ import time
 from time import perf_counter
 import selenium
 from selenium import webdriver 
+from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
 
 #TODO: Go for a sample scrape on a webpage. Output a dictionary. 
 
 class MetaCriticScraper: 
 
-    def __init__(self, driver = webdriver.Chrome()):
+    def __init__(self, driver = Chrome(ChromeDriverManager().install())):
         self.driver = driver 
         # Temporary change in root to debug collecting information from the page. Original root =  "https://www.metacritic.com/"
         # Good game root = "https://www.metacritic.com/game/xbox/halo-combat-evolved"
         # Bad game root = "https://www.metacritic.com/game/gamecube/charlies-angels"
         # Mixed game root = "https://www.metacritic.com/game/pc/white-shadows"
         # Sample page root = "https://www.metacritic.com/browse/games/genre/date/fighting/all"
-        # Sample page root short description = "https://www.metacritic.com/game/ios/the-king-of-fighters-97"
-        self.root = "https://www.metacritic.com"
+        # Sample page root short description = "https://www.metacritic.com/game/playstation-3/divekick"
+        # Sample page root long description = "https://www.metacritic.com/game/pc/mortal-kombat-komplete-edition"
+        self.root = "https://www.metacritic.com/game/playstation-3/divekick"
         driver.get(self.root)
         self.accept_cookies()
         self.page_counter = 0
@@ -28,7 +32,7 @@ class MetaCriticScraper:
                    'MetaCritic_Score': '//a[@class="metascore_anchor"]/div', 
                    'User_Score': '//div[@class="userscore_wrap feature_userscore"]/a/div',
                    'Developer': '//li[@class="summary_detail developer"]/span[2]/a', 
-                   'Description': '//li[@class="summary_detail product_summary"]' } 
+                   'Description': './/li[@class="summary_detail product_summary"]' } 
 
         self.information_dict =  {}
         
@@ -91,7 +95,7 @@ class MetaCriticScraper:
         self.driver.get(next_page_url)
         print(next_page_url)
         print('navigating to next page')
-
+        
         return next_page_url
 
     # New page switching method. 
@@ -129,17 +133,25 @@ class MetaCriticScraper:
     
         #TODO: This could be a staticmethod? 
         for key,xpath in self.xpaths_dict.items():
-           
+         
+            
             try:
                 if key == 'Description':
-                    collapse_button = self.driver.find_element(By.XPATH, '//span[@class="toggle_expand_collapse toggle_expand"]')
-                    if collapse_button:
-                        collapse_button.click()
-                        expanded_description = self.driver.find_element(By.XPATH, '//span[@class="blurb blurb_expanded"]')
-                        self.information_dict[key] = expanded_description.text
-                    else:
-                         web_element = self.driver.find_element(By.XPATH, xpath) 
-                         self.information_dict[key] = web_element.text
+                    web_element = self.driver.find_element(By.XPATH, '//div[@class="summary_wrap"]') 
+
+                    try:
+                        
+                        collapse_button = web_element.find_element(By.XPATH, './/span[@class="toggle_expand_collapse toggle_expand"]')
+                        if collapse_button:
+                            collapse_button.click()
+                            expanded_description = web_element.find_element(By.XPATH, './/span[@class="blurb blurb_expanded"]')
+                            self.information_dict[key] = expanded_description.text
+
+                    except:
+                           summary = web_element.find_element(By.XPATH, xpath)
+                           self.information_dict[key] = summary.text
+
+                   
                 else:
                     web_element = self.driver.find_element(By.XPATH, xpath) 
                     self.information_dict[key] = web_element.text 
@@ -147,6 +159,8 @@ class MetaCriticScraper:
             except:
                 
                 self.information_dict[key] = 'Null'
+
+        
 
         print(self.information_dict)
         return self.information_dict
@@ -200,17 +214,17 @@ new_scraper = MetaCriticScraper()
 # new_scraper.choose_game_category()
 # new_scraper.choose_genre()
 # new_scraper.collect_page_links()
-# new_scraper.get_information_from_page()
+new_scraper.get_information_from_page()
 # new_scraper.click_next_page()
 # new_scrpaer.click_next_page_2()
 # new_scraper.last_page()
 # new_scraper.process_page_links()
 
 # Timing how long it takes to scrape from 100 pages 
-t1_start = perf_counter()
-new_scraper.sample_scraper()
-t1_stop = perf_counter()
-print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
+# t1_start = perf_counter()
+# new_scraper.sample_scraper()
+# t1_stop = perf_counter()
+# print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
 
 # Current stats(1/01/2022): 100 pages in 226 seconds (2 minutes, 4 seconds.)
 # Current stats(27/01/2022): 500 pages in 2828 seconds (47 minutes, 8 seconds)
