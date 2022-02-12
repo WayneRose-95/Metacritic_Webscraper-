@@ -30,7 +30,7 @@ class MetaCriticScraper:
         except TimeoutException as ex:
             isrunning = 0
             print("Exception has been thrown. " + str(ex))
-            driver.close()
+            driver.quit()
 
         
         # driver.get(self.root)
@@ -115,6 +115,7 @@ class MetaCriticScraper:
         next_page_flipper_button = self.driver.find_element(By.XPATH, '//a[@class="action"]').get_attribute("href")
         while True: 
             try: 
+                
                 next_page_flipper_button.click()
                 print('navigating to next page')
             except:
@@ -137,6 +138,15 @@ class MetaCriticScraper:
         return self.information_dict
 
     
+    def click_next_page_3(self):
+
+            try:
+                page_list_elements = self.driver.find_elements(By.CSS_SELECTOR, 'div.pages')
+                print(page_list_elements)
+            except:
+                print('no element found')
+            pass
+
     
     
     def get_information_from_page(self):   
@@ -204,19 +214,26 @@ class MetaCriticScraper:
 
         all_pages_list = []
 
+
+        #range needs to be set dynamically instead of hardcoded
+        #pagevalue = get_number_of_pages()
+        #rangefinal = pagevalue + 1
+        #for page in range(2,rangefinal):
         for page in range(2,7):
             all_pages_list.extend(self.collect_page_links())
             time.sleep(1)
             self.click_next_page(page)
 
+        all_pages_list.extend(self.collect_page_links())
 
         for url in all_pages_list:
            time.sleep(1)
+           #TODO: use a try and except statement to catch the timeout exception. 
            self.driver.get(url)
            time.sleep(2)
            self.get_information_from_page()
         
-        self.last_page()
+        # self.last_page()
 
 
         
@@ -229,6 +246,7 @@ new_scraper = MetaCriticScraper()
 # new_scraper.get_information_from_page()
 # new_scraper.click_next_page()
 # new_scrpaer.click_next_page_2()
+# new_scraper.click_next_page_3()
 # new_scraper.last_page()
 # new_scraper.process_page_links()
 
