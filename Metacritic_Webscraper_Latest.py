@@ -115,8 +115,9 @@ class MetaCriticScraper:
     def collect_number_of_pages(self):
         #TODO: Generalise the CSS_Selector. It's too long and specific to only the fighting games page?  
         last_page_number_element = (self.driver.find_element(By.CSS_SELECTOR, 
-        '#main_content > div.browse.new_releases > div.content_after_header > div > div.next_to_side_col > div > div.marg_top1 > div > div > div.pages > ul > li.page.last_page > a'
-        ).text)
+        '#main_content > div.browse.new_releases > div.content_after_header > \
+        div > div.next_to_side_col > div > div.marg_top1 > div > div > div.pages > ul > \
+        li.page.last_page > a' ).text)
         print(last_page_number_element)
         print(f"Processing page {last_page_number_element}..")
         last_page_number = int(last_page_number_element)
