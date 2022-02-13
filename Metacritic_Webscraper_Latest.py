@@ -1,5 +1,6 @@
 import time 
 from time import perf_counter
+from numpy import number
 import selenium
 # from selenium import webdriver 
 from selenium.webdriver import Chrome
@@ -7,6 +8,7 @@ from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import NoSuchElementException
 
 #TODO: Go for a sample scrape on a webpage. Output a dictionary. 
 
@@ -16,7 +18,8 @@ class MetaCriticScraper:
         self.driver = driver
         
 
-        # Temporary change in root to debug collecting information from the page. Original root =  "https://www.metacritic.com/"
+        # Temporary change in root to debug collecting information from the page. 
+        # Original root =  "https://www.metacritic.com/"
         # Good game root = "https://www.metacritic.com/game/xbox/halo-combat-evolved"
         # Bad game root = "https://www.metacritic.com/game/gamecube/charlies-angels"
         # Mixed game root = "https://www.metacritic.com/game/pc/white-shadows"
@@ -109,21 +112,26 @@ class MetaCriticScraper:
         
         return next_page_url
 
-    # New page switching method. 
-    # Now generalises page switching for all pages using a while loop
-    def click_next_page_2(self):
-        next_page_flipper_button = self.driver.find_element(By.XPATH, '//a[@class="action"]').get_attribute("href")
-        while True: 
-            try: 
-                
-                next_page_flipper_button.click()
-                print('navigating to next page')
-            except:
-                print('no more buttons')
-                break
-        
+    def collect_number_of_pages(self):
+        #TODO: Generalise the CSS_Selector. It's too long and specific to only the fighting games page?  
+        last_page_number_element = (self.driver.find_element(By.CSS_SELECTOR, 
+        '#main_content > div.browse.new_releases > div.content_after_header > div > div.next_to_side_col > div > div.marg_top1 > div > div > div.pages > ul > li.page.last_page > a'
+        ).text)
+        print(last_page_number_element)
+        print(f"Processing page {last_page_number_element}..")
+        last_page_number = int(last_page_number_element)
+
+            # try:
+            #     next_page_link = self.driver.find_element(By.XPATH, f'.//li[span = "{current_page_number + 1}"]')
+            #     next_page_link.click()
+            # except NoSuchElementException:
+            #     print(f"Exiting. Last page: {current_page_number}.")
+            #     break
+        return last_page_number
         
 
+   # TODO: save the page
+   
     #TODO: generalise this last page method to find the last page of all gaming sections  
     def last_page(self):
         last_page_url = 'https://www.metacritic.com/browse/games/genre/date/fighting/all?page=5'
@@ -137,15 +145,6 @@ class MetaCriticScraper:
             self.get_information_from_page()
         return self.information_dict
 
-    
-    def click_next_page_3(self):
-
-            try:
-                page_list_elements = self.driver.find_elements(By.CSS_SELECTOR, 'div.pages')
-                print(page_list_elements)
-            except:
-                print('no element found')
-            pass
 
     
     
@@ -214,12 +213,12 @@ class MetaCriticScraper:
 
         all_pages_list = []
 
-
+        #TODO: steps for future 
         #range needs to be set dynamically instead of hardcoded
-        #pagevalue = get_number_of_pages()
-        #rangefinal = pagevalue + 1
-        #for page in range(2,rangefinal):
-        for page in range(2,7):
+        page_value = self.collect_number_of_pages()
+        range_final = page_value + 1
+        # for page in range(2,rangefinal):
+        for page in range(2,range_final):
             all_pages_list.extend(self.collect_page_links())
             time.sleep(1)
             self.click_next_page(page)
@@ -245,7 +244,7 @@ new_scraper = MetaCriticScraper()
 # new_scraper.collect_page_links()
 # new_scraper.get_information_from_page()
 # new_scraper.click_next_page()
-# new_scrpaer.click_next_page_2()
+# new_scraper.collect_number_of_pages()
 # new_scraper.click_next_page_3()
 # new_scraper.last_page()
 # new_scraper.process_page_links()
