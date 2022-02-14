@@ -229,7 +229,10 @@ class MetaCriticScraper:
         for url in all_pages_list:
            time.sleep(1)
            #TODO: use a try and except statement to catch the timeout exception. 
-           self.driver.get(url)
+           try:
+               self.driver.get(url)
+           except TimeoutException:
+               self.driver.get(url) 
            time.sleep(2)
            self.get_information_from_page()
         
@@ -259,3 +262,4 @@ print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
 # Current stats(1/01/2022): 100 pages in 226 seconds (2 minutes, 4 seconds.)
 # Current stats(27/01/2022): 500 pages in 2828 seconds (47 minutes, 8 seconds)
 # Current stats (3/02/2022): 524 pages in 1742 seconds (29 minutes)
+# Current stats (14/02/2022): 500 pages in 3145 seconds (52 minutes, 24 seconds)
