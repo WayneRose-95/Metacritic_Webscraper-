@@ -1,5 +1,6 @@
 import time 
 from time import perf_counter
+from numpy import number
 import selenium
 # from selenium import webdriver 
 from selenium.webdriver import Chrome
@@ -7,6 +8,7 @@ from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import NoSuchElementException
 
 #TODO: Go for a sample scrape on a webpage. Output a dictionary. 
 
@@ -16,7 +18,8 @@ class MetaCriticScraper:
         self.driver = driver
         
 
-        # Temporary change in root to debug collecting information from the page. Original root =  "https://www.metacritic.com/"
+        # Temporary change in root to debug collecting information from the page. 
+        # Original root =  "https://www.metacritic.com/"
         # Good game root = "https://www.metacritic.com/game/xbox/halo-combat-evolved"
         # Bad game root = "https://www.metacritic.com/game/gamecube/charlies-angels"
         # Mixed game root = "https://www.metacritic.com/game/pc/white-shadows"
@@ -24,13 +27,15 @@ class MetaCriticScraper:
         # Sample page root short description = "https://www.metacritic.com/game/playstation-3/divekick"
         # Sample page root long description = "https://www.metacritic.com/game/pc/mortal-kombat-komplete-edition"
         self.root = "https://www.metacritic.com/"
+
+        #TODO: Implement Headless Mode into the main code and test it out  
         try:
             driver.set_page_load_timeout(30)
             driver.get(self.root)
         except TimeoutException as ex:
             isrunning = 0
             print("Exception has been thrown. " + str(ex))
-            driver.close()
+            driver.quit()
 
         
         # driver.get(self.root)
@@ -98,7 +103,6 @@ class MetaCriticScraper:
 
     def click_next_page(self, page):
 
-        # iterate over pages 2 to 7.
         #TODO: find a way to generalise this code for all pages on the website. Maybe make another method to check the last page? 
     
         next_page_element = self.driver.find_element(By.XPATH, f'//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[{page}]/*')
@@ -109,20 +113,26 @@ class MetaCriticScraper:
         
         return next_page_url
 
-    # New page switching method. 
-    # Now generalises page switching for all pages using a while loop
-    def click_next_page_2(self):
-        next_page_flipper_button = self.driver.find_element(By.XPATH, '//a[@class="action"]').get_attribute("href")
-        while True: 
-            try: 
-                next_page_flipper_button.click()
-                print('navigating to next page')
-            except:
-                print('no more buttons')
-                break
-        
+    def collect_number_of_pages(self):
+        #TODO: Generalise the CSS_Selector. It's too long and specific to only the fighting games page?  
+        last_page_number_element = (self.driver.find_element(By.CSS_SELECTOR, 
+        '#main_content > div.browse.new_releases > div.content_after_header > \
+        div > div.next_to_side_col > div > div.marg_top1 > div > div > div.pages > ul > \
+        li.page.last_page > a' ).text)
+        print(last_page_number_element)
+        print(f"Processing page {last_page_number_element}..")
+        last_page_number = int(last_page_number_element)
+
+            # try:
+            #     next_page_link = self.driver.find_element(By.XPATH, f'.//li[span = "{current_page_number + 1}"]')
+            #     next_page_link.click()
+            # except NoSuchElementException:
+            #     print(f"Exiting. Last page: {current_page_number}.")
+            #     break
+        return last_page_number
         
 
+   
     #TODO: generalise this last page method to find the last page of all gaming sections  
     def last_page(self):
         last_page_url = 'https://www.metacritic.com/browse/games/genre/date/fighting/all?page=5'
@@ -136,7 +146,7 @@ class MetaCriticScraper:
             self.get_information_from_page()
         return self.information_dict
 
-    
+
     
     
     def get_information_from_page(self):   
@@ -196,7 +206,7 @@ class MetaCriticScraper:
        
 
     def sample_scraper(self):
-        # Goes to Games > Games Home > 'Search by Genre': Fighting > Scrapes 5 pages of content 
+        # Goes to Games > Games Home > 'Search by Genre': Fighting > Scrapes 6 pages of content 
         self.choose_game_category()
         self.choose_genre()
 
@@ -204,19 +214,29 @@ class MetaCriticScraper:
 
         all_pages_list = []
 
-        for page in range(2,7):
+        #TODO: steps for future 
+        #range needs to be set dynamically instead of hardcoded
+        page_value = self.collect_number_of_pages()
+        range_final = page_value + 1
+        # for page in range(2,rangefinal):
+        for page in range(2,range_final):
             all_pages_list.extend(self.collect_page_links())
             time.sleep(1)
             self.click_next_page(page)
 
+        all_pages_list.extend(self.collect_page_links())
 
         for url in all_pages_list:
            time.sleep(1)
-           self.driver.get(url)
+           #TODO: use a try and except statement to catch the timeout exception. 
+           try:
+               self.driver.get(url)
+           except TimeoutException:
+               self.driver.get(url) 
            time.sleep(2)
            self.get_information_from_page()
         
-        self.last_page()
+        # self.last_page()
 
 
         
@@ -228,7 +248,8 @@ new_scraper = MetaCriticScraper()
 # new_scraper.collect_page_links()
 # new_scraper.get_information_from_page()
 # new_scraper.click_next_page()
-# new_scrpaer.click_next_page_2()
+# new_scraper.collect_number_of_pages()
+# new_scraper.click_next_page_3()
 # new_scraper.last_page()
 # new_scraper.process_page_links()
 
@@ -241,3 +262,5 @@ print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
 # Current stats(1/01/2022): 100 pages in 226 seconds (2 minutes, 4 seconds.)
 # Current stats(27/01/2022): 500 pages in 2828 seconds (47 minutes, 8 seconds)
 # Current stats (3/02/2022): 524 pages in 1742 seconds (29 minutes)
+# Current stats (14/02/2022): 500 pages in 3145 seconds (52 minutes, 24 seconds)
+# Current stats (15/02/2022): 524 pages in 2481 seconds (41 minutes, 21 seconds )
