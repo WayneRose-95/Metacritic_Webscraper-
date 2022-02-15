@@ -27,6 +27,8 @@ class MetaCriticScraper:
         # Sample page root short description = "https://www.metacritic.com/game/playstation-3/divekick"
         # Sample page root long description = "https://www.metacritic.com/game/pc/mortal-kombat-komplete-edition"
         self.root = "https://www.metacritic.com/"
+
+        #TODO: Implement Headless Mode into the main code and test it out  
         try:
             driver.set_page_load_timeout(30)
             driver.get(self.root)
@@ -101,7 +103,6 @@ class MetaCriticScraper:
 
     def click_next_page(self, page):
 
-        # iterate over pages 2 to 7.
         #TODO: find a way to generalise this code for all pages on the website. Maybe make another method to check the last page? 
     
         next_page_element = self.driver.find_element(By.XPATH, f'//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[{page}]/*')
@@ -131,7 +132,6 @@ class MetaCriticScraper:
         return last_page_number
         
 
-   # TODO: save the page
    
     #TODO: generalise this last page method to find the last page of all gaming sections  
     def last_page(self):
@@ -206,7 +206,7 @@ class MetaCriticScraper:
        
 
     def sample_scraper(self):
-        # Goes to Games > Games Home > 'Search by Genre': Fighting > Scrapes 5 pages of content 
+        # Goes to Games > Games Home > 'Search by Genre': Fighting > Scrapes 6 pages of content 
         self.choose_game_category()
         self.choose_genre()
 
