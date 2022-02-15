@@ -197,11 +197,6 @@ class MetaCriticScraper:
     # This link should help: 
     # https://pretagteam.com/question/loop-through-links-and-scrape-data-from-resulting-pages-using-selenium-python-duplicate
 
-    def process_page_links(self):
-        
-
-        for url in self.collect_page_links():
-            self.driver.get(url)
          
        
 
@@ -231,12 +226,14 @@ class MetaCriticScraper:
            #TODO: use a try and except statement to catch the timeout exception. 
            try:
                self.driver.get(url)
+               time.sleep(2)
            except TimeoutException:
+               time.sleep(4)
                self.driver.get(url) 
-           time.sleep(2)
+               
            self.get_information_from_page()
         
-        # self.last_page()
+        
 
 
         
@@ -263,4 +260,5 @@ print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
 # Current stats(27/01/2022): 500 pages in 2828 seconds (47 minutes, 8 seconds)
 # Current stats (3/02/2022): 524 pages in 1742 seconds (29 minutes)
 # Current stats (14/02/2022): 500 pages in 3145 seconds (52 minutes, 24 seconds)
-# Current stats (15/02/2022): 524 pages in 2481 seconds (41 minutes, 21 seconds )
+# Current stats (15/02/2022): 524 pages in 2481 seconds (41 minutes, 21 seconds)
+# Current stats (15/02/2022, 22:46pm): 524 pages in 2697 seconds (44 minutes, 57 seconds)
