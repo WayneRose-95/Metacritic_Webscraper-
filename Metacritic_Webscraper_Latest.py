@@ -243,23 +243,23 @@ class MetaCriticScraper:
 
         
        # new syntax for driver.find_elements(By.XPATH, "xpath string")
-      
-new_scraper = MetaCriticScraper("https://www.metacritic.com/")
-# new_scraper.choose_game_category()
-# new_scraper.choose_genre()
-# new_scraper.collect_page_links()
-# new_scraper.get_information_from_page()
-# new_scraper.click_next_page()
-# new_scraper.collect_number_of_pages()
-# new_scraper.click_next_page_3()
-# new_scraper.last_page()
-# new_scraper.process_page_links()
+if __name__ == '__main__':     
+    new_scraper = MetaCriticScraper("https://www.metacritic.com/")
+    # new_scraper.choose_game_category()
+    # new_scraper.choose_genre()
+    # new_scraper.collect_page_links()
+    # new_scraper.get_information_from_page()
+    # new_scraper.click_next_page()
+    # new_scraper.collect_number_of_pages()
+    # new_scraper.click_next_page_3()
+    # new_scraper.last_page()
+    # new_scraper.process_page_links()
 
-# Timing how long it takes to scrape from 100 pages 
-t1_start = perf_counter()
-new_scraper.sample_scraper()
-t1_stop = perf_counter()
-print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
+    # Timing how long it takes to scrape from 100 pages 
+    t1_start = perf_counter()
+    new_scraper.sample_scraper()
+    t1_stop = perf_counter()
+    print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
 
 # Current stats(1/01/2022): 100 pages in 226 seconds (2 minutes, 4 seconds.)
 # Current stats(27/01/2022): 500 pages in 2828 seconds (47 minutes, 8 seconds)
