@@ -1,7 +1,9 @@
 import unittest 
 from Metacritic_Webscraper_Latest import MetaCriticScraper
 import time 
+import tracemalloc 
 
+tracemalloc.start()
 
 class ASOS_Webscraper_Tests(unittest.TestCase):
 
@@ -36,14 +38,22 @@ class ASOS_Webscraper_Tests(unittest.TestCase):
             test_input = self.scraper.get_information_from_page()
             self.assertIsInstance(test_input, dict)
 
+    tracemalloc.reset_peak()
 
     def test_collect_number_of_pages(self):
 
-        test_page = "https://www.metacritic.com/browse/games/genre/date/fighting/all"
+        #TODO: find a way to pass in multiple urls to test the method
 
+        test_page = "https://www.metacritic.com/browse/games/genre/date/racing/all"
+        
         self.scraper.driver.get(test_page)
-        expected_output = 6
         test_input = self.scraper.collect_number_of_pages()
+      
+        expected_output = 17
+        
         self.assertEqual(expected_output, test_input)
 
+    def tearDown(self):
+        self.scraper.driver.quit()
+        
 unittest.main(argv=[''], verbosity=2, exit=False)
