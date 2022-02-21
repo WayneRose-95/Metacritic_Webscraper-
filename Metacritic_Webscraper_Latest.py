@@ -14,8 +14,13 @@ from selenium.common.exceptions import NoSuchElementException
 
 class MetaCriticScraper: 
 
-    def __init__(self, driver = Chrome(ChromeDriverManager().install())):
-        self.driver = driver
+    def __init__(self, url, options=None):
+        if options:
+            self.driver = Chrome(ChromeDriverManager().install(), options=options)
+        else:
+            self.driver = Chrome(ChromeDriverManager().install())
+
+        
         
 
         # Temporary change in root to debug collecting information from the page. 
@@ -30,12 +35,12 @@ class MetaCriticScraper:
 
         #TODO: Implement Headless Mode into the main code and test it out  
         try:
-            driver.set_page_load_timeout(30)
-            driver.get(self.root)
+            self.driver.set_page_load_timeout(30)
+            self.driver.get(url)
         except TimeoutException as ex:
             isrunning = 0
             print("Exception has been thrown. " + str(ex))
-            driver.quit()
+            self.driver.quit()
 
         
         # driver.get(self.root)
@@ -239,7 +244,7 @@ class MetaCriticScraper:
         
        # new syntax for driver.find_elements(By.XPATH, "xpath string")
       
-new_scraper = MetaCriticScraper()
+new_scraper = MetaCriticScraper("https://www.metacritic.com/")
 # new_scraper.choose_game_category()
 # new_scraper.choose_genre()
 # new_scraper.collect_page_links()
