@@ -10,7 +10,18 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import NoSuchElementException
 
-#TODO: Go for a sample scrape on a webpage. Output a dictionary. 
+'''
+Main Class Code things to do (22/02/2022)
+
+1. Add a method to save the image(s) on the page 
+
+2. Add a method to save the outputs to a .json format. 
+   (if possible, extend this to other formats)
+
+3. Add a method (or seperate class) to interact 
+   with the filters on pages
+
+'''
 
 class MetaCriticScraper: 
 
@@ -21,8 +32,6 @@ class MetaCriticScraper:
             self.driver = Chrome(ChromeDriverManager().install())
 
         
-        
-
         # Temporary change in root to debug collecting information from the page. 
         # Original root =  "https://www.metacritic.com/"
         # Good game root = "https://www.metacritic.com/game/xbox/halo-combat-evolved"

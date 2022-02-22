@@ -3,6 +3,29 @@ from Metacritic_Webscraper_Latest import MetaCriticScraper
 import time 
 import tracemalloc 
 
+'''
+Unittest Suite: 
+
+Sample Unittest Suite for the current version 
+of the Metacritic_Webscraper_Latest.py file (22/02/2022)
+
+Things to add (22/02/2022):
+
+Some of the things to add do NOT have methods associated with them yet
+
+1. Add a test to determine the file format for the scraper outputs. 
+   
+
+2. Add a test to determine the robustness of the accept_cookies method
+
+3. Add a test to see if the save_image method works as intended 
+   
+
+4. Add a test to determine the validity of the images saved. 
+   This can be done using the ImageHash library 
+   
+
+'''
 tracemalloc.start()
 
 class ASOS_Webscraper_Tests(unittest.TestCase):
