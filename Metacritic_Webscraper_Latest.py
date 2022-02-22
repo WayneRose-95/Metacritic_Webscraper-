@@ -10,14 +10,28 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import NoSuchElementException
 
-#TODO: Go for a sample scrape on a webpage. Output a dictionary. 
+'''
+Main Class Code things to do (22/02/2022)
+
+1. Add a method to save the image(s) on the page 
+
+2. Add a method to save the outputs to a .json format. 
+   (if possible, extend this to other formats)
+
+3. Add a method (or seperate class) to interact 
+   with the filters on pages
+
+'''
 
 class MetaCriticScraper: 
 
-    def __init__(self, driver = Chrome(ChromeDriverManager().install())):
-        self.driver = driver
-        
+    def __init__(self, url, options=None):
+        if options:
+            self.driver = Chrome(ChromeDriverManager().install(), options=options)
+        else:
+            self.driver = Chrome(ChromeDriverManager().install())
 
+        
         # Temporary change in root to debug collecting information from the page. 
         # Original root =  "https://www.metacritic.com/"
         # Good game root = "https://www.metacritic.com/game/xbox/halo-combat-evolved"
@@ -30,12 +44,12 @@ class MetaCriticScraper:
 
         #TODO: Implement Headless Mode into the main code and test it out  
         try:
-            driver.set_page_load_timeout(30)
-            driver.get(self.root)
+            self.driver.set_page_load_timeout(30)
+            self.driver.get(url)
         except TimeoutException as ex:
             isrunning = 0
             print("Exception has been thrown. " + str(ex))
-            driver.quit()
+            self.driver.quit()
 
         
         # driver.get(self.root)
@@ -238,23 +252,23 @@ class MetaCriticScraper:
 
         
        # new syntax for driver.find_elements(By.XPATH, "xpath string")
-      
-new_scraper = MetaCriticScraper()
-# new_scraper.choose_game_category()
-# new_scraper.choose_genre()
-# new_scraper.collect_page_links()
-# new_scraper.get_information_from_page()
-# new_scraper.click_next_page()
-# new_scraper.collect_number_of_pages()
-# new_scraper.click_next_page_3()
-# new_scraper.last_page()
-# new_scraper.process_page_links()
+if __name__ == '__main__':     
+    new_scraper = MetaCriticScraper("https://www.metacritic.com/")
+    # new_scraper.choose_game_category()
+    # new_scraper.choose_genre()
+    # new_scraper.collect_page_links()
+    # new_scraper.get_information_from_page()
+    # new_scraper.click_next_page()
+    # new_scraper.collect_number_of_pages()
+    # new_scraper.click_next_page_3()
+    # new_scraper.last_page()
+    # new_scraper.process_page_links()
 
-# Timing how long it takes to scrape from 100 pages 
-t1_start = perf_counter()
-new_scraper.sample_scraper()
-t1_stop = perf_counter()
-print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
+    # Timing how long it takes to scrape from 100 pages 
+    t1_start = perf_counter()
+    new_scraper.sample_scraper()
+    t1_stop = perf_counter()
+    print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
 
 # Current stats(1/01/2022): 100 pages in 226 seconds (2 minutes, 4 seconds.)
 # Current stats(27/01/2022): 500 pages in 2828 seconds (47 minutes, 8 seconds)
