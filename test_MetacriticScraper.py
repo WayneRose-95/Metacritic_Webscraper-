@@ -35,6 +35,7 @@ class ASOS_Webscraper_Tests(unittest.TestCase):
         # to see if it generates a dictionary output          
         for url in test_urls:
             self.scraper.driver.get(url)
+            time.sleep(2)
             test_input = self.scraper.get_information_from_page()
             self.assertIsInstance(test_input, dict)
 
@@ -63,6 +64,16 @@ class ASOS_Webscraper_Tests(unittest.TestCase):
         expected_output = 17
         
         self.assertEqual(expected_output, test_input)
+
+    tracemalloc.reset_peak()
+
+    def test_collect_page_links(self):
+        test_page = "https://www.metacritic.com/browse/albums/genre/date/electronic"
+        self.scraper.driver.get(test_page)
+        test_input = self.scraper.collect_page_links()
+
+        self.assertIsInstance(test_input, list)
+        self.assertEqual(len(test_input), 100)
 
     def tearDown(self):
         self.scraper.driver.quit()
