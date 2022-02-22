@@ -13,7 +13,7 @@ class ASOS_Webscraper_Tests(unittest.TestCase):
     
     def test_get_information_from_page(self):
         '''
-        Unittset to ensure that information is being collected 
+        Unittest to ensure that information is being collected 
         from variety of pages 
 
         Returns: An instance of a dict if True
@@ -41,7 +41,18 @@ class ASOS_Webscraper_Tests(unittest.TestCase):
     tracemalloc.reset_peak()
 
     def test_collect_number_of_pages(self):
+        '''
+        Unittest to determine the maximum number of pages in 
+        each section of the website 
 
+        Returns:
+        An Integer to be as a value in iterating through each of the
+        pages on the website. 
+
+        The test uses the method on a page with page numbers on the website, 
+        and tries to match the expected_output variable with the variable 
+        that the method returns. 
+        '''
         #TODO: find a way to pass in multiple urls to test the method
 
         test_page = "https://www.metacritic.com/browse/games/genre/date/racing/all"
