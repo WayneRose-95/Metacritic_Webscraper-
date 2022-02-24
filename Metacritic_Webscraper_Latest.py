@@ -1,3 +1,4 @@
+import csv
 import time 
 from time import perf_counter
 import os 
@@ -224,7 +225,7 @@ class MetaCriticScraper:
     # This link should help: 
     # https://pretagteam.com/question/loop-through-links-and-scrape-data-from-resulting-pages-using-selenium-python-duplicate
 
-    def _save_json(self, all_products_dictionary, sub_category_name):
+    def save_json(self, all_products_dictionary, sub_category_name):
         #TODO: Run a unittest on this method to check that a json file is created
         file_to_convert = all_products_dictionary
         file_name = f'{sub_category_name}-details.json'
@@ -233,8 +234,22 @@ class MetaCriticScraper:
             os.makedirs('json-files')
         with open(f'json-files/{file_name}', mode='a+', encoding='utf-8-sig') as f:
             json.dump(file_to_convert, f, indent=4, ensure_ascii=False) 
-            f.write('\n')      
-       
+            f.write('\n')
+        return True     
+
+    # def _save_csv(self, information_dict, field_names:list, sub_category_name):
+    #     #TODO: Debug this method via a Unittest. It should return True. 
+    #     file_to_convert = information_dict 
+
+    #     file_name = f'{sub_category_name}-details.csv' 
+        
+    #     if not os.path.exists('csv-files'):
+    #         os.makedirs('csv-files')
+    #     with open(f'csv-files/{file_name}', mode='a+', encoding='utf-8-sig', newline='') as f:
+    #         csv.DictWriter(file_to_convert, fieldnames=field_names) 
+    #         f.write('\n')
+    #     return True
+
 
     def sample_scraper(self):
         # Goes to Games > Games Home > 'Search by Genre': Fighting > Scrapes 6 pages of content 
