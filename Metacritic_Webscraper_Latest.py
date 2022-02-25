@@ -158,24 +158,7 @@ class MetaCriticScraper:
             #     print(f"Exiting. Last page: {current_page_number}.")
             #     break
         return last_page_number
-        
-
-   
-    #TODO: generalise this last page method to find the last page of all gaming sections  
-    def last_page(self):
-        last_page_url = 'https://www.metacritic.com/browse/games/genre/date/fighting/all?page=5'
-        # '//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[6]'
-        self.driver.get(last_page_url)
-        self.collect_page_links()
-
-        for url in self.collect_page_links():
-            self.driver.get(url)
-            time.sleep(2)
-            self.get_information_from_page()
-        return self.information_dict
-
-
-    
+           
     
     def get_information_from_page(self):   
         
@@ -313,3 +296,4 @@ if __name__ == '__main__':
 # Current stats (14/02/2022): 500 pages in 3145 seconds (52 minutes, 24 seconds)
 # Current stats (15/02/2022): 524 pages in 2481 seconds (41 minutes, 21 seconds)
 # Current stats (15/02/2022, 22:46pm): 524 pages in 2697 seconds (44 minutes, 57 seconds)
+
