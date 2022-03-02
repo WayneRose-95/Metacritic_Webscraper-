@@ -120,21 +120,6 @@ class ASOS_Webscraper_Tests(unittest.TestCase):
             print(test_json)
             self.assertTrue(test_json, True)
     
-    # def test_save_csv(self):
-    # #TODO: Debug this error: 
-   
-    #     with open("test_scraper_output.txt", 'r') as test_file:
-    #         print(type(test_file))
-    #         headers = ['Title', 
-    #                        'Platform', 
-    #                        'Release Date', 
-    #                        'Metacritic Score', 
-    #                        'User Score', 
-    #                        'Description']
-    #         test_csv = self.scraper._save_csv(test_file,  headers, sub_category_name='fighting_games')
-            
-
-    #         self.assertIsInstance(test_csv, TextIOWrapper)
 
     def tearDown(self):
         self.scraper.driver.quit()

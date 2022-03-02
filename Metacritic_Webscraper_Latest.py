@@ -221,20 +221,6 @@ class MetaCriticScraper:
             f.write('\n')
         return True     
 
-    def _save_image(self, sub_category_name: str):
-        
-            image_category = sub_category_name
-            image_name = f'{sub_category_name}-image'
-            src_container = self.driver.find_element(By.XPATH, '//img[@class="product_image large_image"]').get_attribute('src')
-            
-            
-            image_path = f'images/{image_category}'
-            if not os.path.exists(image_path):
-                os.makedirs(image_path)         
-            for i,src in enumerate(src_container[:-1],1):   
-                urllib.request.urlretrieve(src, f'{image_path}/{image_name}.{i}.jpg') 
-            
-            return True
 
     def sample_scraper(self):
         # Goes to Games > Games Home > 'Search by Genre': Fighting > Scrapes 6 pages of content 
