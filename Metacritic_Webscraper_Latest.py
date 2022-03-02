@@ -11,13 +11,14 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import NoSuchElementException
+import urllib.request
 
 '''
 Main Class Code things to do (22/02/2022)
 
 1. Add a method to save the image(s) on the page 
 
-2. Add a method to save the outputs to a .json format. 
+2. DONE: Add a method to save the outputs to a .json format. 
    (if possible, extend this to other formats)
 
 3. Add a method (or seperate class) to interact 
@@ -220,19 +221,18 @@ class MetaCriticScraper:
             f.write('\n')
         return True     
 
-    # def _save_csv(self, information_dict, field_names:list, sub_category_name):
-    #     #TODO: Debug this method via a Unittest. It should return True. 
-    #     file_to_convert = information_dict 
-
-    #     file_name = f'{sub_category_name}-details.csv' 
+    def _save_image(self, sub_category_name: str):
         
-    #     if not os.path.exists('csv-files'):
-    #         os.makedirs('csv-files')
-    #     with open(f'csv-files/{file_name}', mode='a+', encoding='utf-8-sig', newline='') as f:
-    #         csv.DictWriter(file_to_convert, fieldnames=field_names) 
-    #         f.write('\n')
-    #     return True
-
+            image_category = sub_category_name
+            image_name = f'{sub_category_name}-image'
+            src_container = self.driver.find_element(By.XPATH, '//img[@class="product_image large_image"]').get_attribute('src')
+            
+            
+            image_path = f'images/{image_category}'
+            if not os.path.exists(image_path):
+                os.makedirs(image_path)         
+            for i,src in enumerate(src_container[:-1],1):   
+                urllib.request.urlretrieve(src, f'{image_path}/{image_name}.{i}.jpg') 
 
     def sample_scraper(self):
         # Goes to Games > Games Home > 'Search by Genre': Fighting > Scrapes 6 pages of content 
