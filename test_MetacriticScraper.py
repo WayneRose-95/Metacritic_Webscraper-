@@ -1,4 +1,7 @@
-import unittest 
+import csv
+from io import TextIOWrapper
+import unittest
+from xmlrpc.client import Boolean 
 from Metacritic_Webscraper_Latest import MetaCriticScraper
 import time 
 import tracemalloc 
@@ -97,6 +100,26 @@ class ASOS_Webscraper_Tests(unittest.TestCase):
 
         self.assertIsInstance(test_input, list)
         self.assertEqual(len(test_input), 100)
+    
+    # def test_accept_cookies(self):
+        #TODO: Write a unittest for this method 
+        pass
+
+    def test_save_json(self):
+        #TODO: Debug this error: 
+        # TypeError: Object of type TextIOWrapper is not JSON serializable
+        with open("test_scraper_output.txt", 'r', encoding='utf-8-sig') as test_file:
+            content_dict = []
+            contents = test_file.readlines()
+            for content in contents: 
+                content_dict.append(eval(content))
+            print(content[:5])
+            print(type(content))
+            test_json = self.scraper.save_json(content_dict, sub_category_name='fighting_games')
+            
+            print(test_json)
+            self.assertTrue(test_json, True)
+    
 
     def tearDown(self):
         self.scraper.driver.quit()

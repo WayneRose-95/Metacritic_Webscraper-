@@ -1,7 +1,9 @@
+import csv
 import time 
 from time import perf_counter
-from numpy import number
+import os 
 import selenium
+import json 
 # from selenium import webdriver 
 from selenium.webdriver import Chrome
 # from selenium.webdriver.chrome.options import Options
@@ -9,13 +11,14 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import NoSuchElementException
+import urllib.request
 
 '''
 Main Class Code things to do (22/02/2022)
 
 1. Add a method to save the image(s) on the page 
 
-2. Add a method to save the outputs to a .json format. 
+2. DONE: Add a method to save the outputs to a .json format. 
    (if possible, extend this to other formats)
 
 3. Add a method (or seperate class) to interact 
@@ -53,7 +56,7 @@ class MetaCriticScraper:
 
         
         # driver.get(self.root)
-        self.accept_cookies()
+        self.accept_cookies('//button[@id="onetrust-accept-btn-handler"]')
         self.page_counter = 0
 
         self.xpaths_dict = {'Title': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/a/h1', 
@@ -67,10 +70,22 @@ class MetaCriticScraper:
         self.information_dict =  {}
         
 
-    def accept_cookies(self): 
+    def accept_cookies(self, cookies_button_xpath, iframe=None): 
+        #TODO: Create a unittest for this method 
         time.sleep(4)
-        accept_cookies = self.driver.find_element_by_xpath('//button[@id="onetrust-accept-btn-handler"]')
-        accept_cookies.click()
+        try: # To find if the accept cookies button is within a frame 
+            self.driver.switch_to.frame(iframe)
+            accept_cookies = self.driver.find_element(By.XPATH, cookies_button_xpath)
+            accept_cookies.click()
+        except NoSuchElementException: # If it is not within a frame then find the xpath and proceed click it. 
+            print('No iframe found')
+            accept_cookies = self.driver.find_element(By.XPATH, cookies_button_xpath)
+            accept_cookies.click()
+        time.sleep(2)
+        return True 
+
+
+        
     
     def choose_game_category(self):
         # Choose the game category from the list
@@ -144,24 +159,7 @@ class MetaCriticScraper:
             #     print(f"Exiting. Last page: {current_page_number}.")
             #     break
         return last_page_number
-        
-
-   
-    #TODO: generalise this last page method to find the last page of all gaming sections  
-    def last_page(self):
-        last_page_url = 'https://www.metacritic.com/browse/games/genre/date/fighting/all?page=5'
-        # '//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[6]'
-        self.driver.get(last_page_url)
-        self.collect_page_links()
-
-        for url in self.collect_page_links():
-            self.driver.get(url)
-            time.sleep(2)
-            self.get_information_from_page()
-        return self.information_dict
-
-
-    
+           
     
     def get_information_from_page(self):   
         
@@ -211,8 +209,18 @@ class MetaCriticScraper:
     # This link should help: 
     # https://pretagteam.com/question/loop-through-links-and-scrape-data-from-resulting-pages-using-selenium-python-duplicate
 
-         
-       
+    def save_json(self, all_products_dictionary, sub_category_name):
+        #TODO: Run a unittest on this method to check that a json file is created
+        file_to_convert = all_products_dictionary
+        file_name = f'{sub_category_name}-details.json'
+
+        if not os.path.exists('json-files'):
+            os.makedirs('json-files')
+        with open(f'json-files/{file_name}', mode='a+', encoding='utf-8-sig') as f:
+            json.dump(file_to_convert, f, indent=4, ensure_ascii=False) 
+            f.write('\n')
+        return True     
+
 
     def sample_scraper(self):
         # Goes to Games > Games Home > 'Search by Genre': Fighting > Scrapes 6 pages of content 
@@ -276,3 +284,4 @@ if __name__ == '__main__':
 # Current stats (14/02/2022): 500 pages in 3145 seconds (52 minutes, 24 seconds)
 # Current stats (15/02/2022): 524 pages in 2481 seconds (41 minutes, 21 seconds)
 # Current stats (15/02/2022, 22:46pm): 524 pages in 2697 seconds (44 minutes, 57 seconds)
+
