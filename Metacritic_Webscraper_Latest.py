@@ -233,6 +233,8 @@ class MetaCriticScraper:
                 os.makedirs(image_path)         
             for i,src in enumerate(src_container[:-1],1):   
                 urllib.request.urlretrieve(src, f'{image_path}/{image_name}.{i}.jpg') 
+            
+            return True
 
     def sample_scraper(self):
         # Goes to Games > Games Home > 'Search by Genre': Fighting > Scrapes 6 pages of content 
