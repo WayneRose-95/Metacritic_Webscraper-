@@ -15,7 +15,7 @@ class Scraper:
     def __init__(self, options=None):
 
         if options:
-            self.driver = Chrome(ChromeDriverManager().install(), options=Options)
+            self.driver = Chrome(ChromeDriverManager().install(), options=Options())
         else:
             self.driver = Chrome(ChromeDriverManager().install())
     
