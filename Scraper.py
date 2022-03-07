@@ -77,12 +77,15 @@ if __name__ == "__main__":
 
     bot.accept_cookies('/html/body/div[3]/div[1]/div[1]/div/button[2]')
 #%%
+    # Xpaths from Wikipedia 
     bot.find_search_bar('//input[@class="vector-search-box-input"]', '//div[@class="ConsentManager__Overlay-np32r2-0 gDTHbw"]')
 #%%
+
     bot.input_something_into_search_bar('Rick and Morty')
 
     
-#%%    
+#%% 
+    # Xpath from Wikipedia 
     bot.find_container('//div[@id="bodyContent"]')
  
 
