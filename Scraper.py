@@ -4,7 +4,12 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchFrameException
 # from selenium.webdriver.support.ui import WebDriverWait
+import time 
+
+
 
 #%%
 class Scraper: 
@@ -22,6 +27,19 @@ class Scraper:
     def land_first_page(self, page_url):
         home_page = self.driver.get(page_url)
         return home_page
+
+    def accept_cookies(self, cookies_button_xpath, iframe=None): 
+        #TODO: Create a unittest for this method 
+        time.sleep(4)
+        try: # To find if the accept cookies button is within a frame 
+            self.driver.switch_to.frame(iframe)
+           
+        except NoSuchFrameException: # If it is not within a frame then find the xpath and proceed click it. 
+            print('No iframe found')
+            accept_cookies = self.driver.find_element(By.XPATH, cookies_button_xpath)
+            accept_cookies.click()
+        time.sleep(2)
+        return True  
     
     def find_search_bar(self, search_bar_xpath):
         try:
@@ -53,10 +71,13 @@ class Scraper:
 
 if __name__ == "__main__":
     bot = Scraper()    
-    bot.land_first_page("https://en.wikipedia.org/wiki/Main_Page")
+    bot.land_first_page("https://www.cbr.com/")
 
 #%%
-    bot.find_search_bar('//input[@class="vector-search-box-input"]')
+
+    bot.accept_cookies('/html/body/div[3]/div[1]/div[1]/div/button[2]')
+#%%
+    bot.find_search_bar('//input[@class="vector-search-box-input"]', '//div[@class="ConsentManager__Overlay-np32r2-0 gDTHbw"]')
 #%%
     bot.input_something_into_search_bar('Rick and Morty')
 
