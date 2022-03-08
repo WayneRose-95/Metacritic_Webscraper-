@@ -7,7 +7,9 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import NoSuchFrameException
 # from selenium.webdriver.support.ui import WebDriverWait
-import time 
+import time
+import os 
+import urllib.request
 
 
 
@@ -31,25 +33,37 @@ class Scraper:
     def accept_cookies(self, cookies_button_xpath, iframe=None): 
         #TODO: Create a unittest for this method 
         time.sleep(4)
-        try: # To find if the accept cookies button is within a frame 
-            self.driver.switch_to.frame(iframe)
+        try: # To find if the accept cookies button is within a frame
+            cookies_iframe = self.driver.find_element(By.ID, iframe) 
+            self.driver.switch_to.frame(cookies_iframe)
+            accept_cookies = self.driver.find_element(By.XPATH, cookies_button_xpath)
+            accept_cookies.click()
            
         except NoSuchFrameException: # If it is not within a frame then find the xpath and proceed click it. 
             print('No iframe found')
             accept_cookies = self.driver.find_element(By.XPATH, cookies_button_xpath)
             accept_cookies.click()
+            print('The accept cookies button has been clicked')
         time.sleep(2)
         return True  
     
-    def find_search_bar(self, search_bar_xpath):
+    def find_search_bar_then_pass_input_into_search_bar(self, search_bar_xpath, text):
         try:
             
             search_bar_element = self.driver.find_element(By.XPATH, search_bar_xpath)
             search_bar_element.click()
         except:
             print('no search bar found')
+
+
+        if search_bar_element:
+            search_bar_element.send_keys(text)
+            search_bar_element.send_keys(Keys.ENTER)
+        else:
+            raise Exception('Text failed')
         
-        return search_bar_element
+            
+        return search_bar_element, text
 
        
     def input_something_into_search_bar(self, text):
@@ -67,27 +81,49 @@ class Scraper:
         except:
             raise Exception('There was no element')
 
+    def _save_image(self, sub_category_name: str, image_xpath):
+        """
+        Method to download every product image (jpg format) to local and/or s3_bucket locations.
+    
+        Parameters: 
+            sub_category_name (str): parameter determined within the get_product_information method.
+        """
+        image_category = sub_category_name
+        image_name = f'{sub_category_name}-image'
+        src_list = self.driver.find_elements(By.XPATH, image_xpath).text()
+        # //*[@id="product-gallery"]/div[2]/div[2]/div[2]/img
+        
+        image_path = f'images/{image_category}'
+        if not os.path.exists(image_path):
+            os.makedirs(image_path)         
+        for i,src in enumerate(src_list[:-1],1):   
+            urllib.request.urlretrieve(src, f'{image_path}/{image_name}.{i}.jpg')
+
 #%%
 
 if __name__ == "__main__":
     bot = Scraper()    
-    bot.land_first_page("https://www.cbr.com/")
+    bot.land_first_page("https://www.zoopla.co.uk/")
 
 #%%
+    # Xpaths from cbr.com
+    # '/html/body/div[3]/div[1]/div[1]/div/button[2]', 
+    # '//div[@class="ConsentManager__Overlay-np32r2-0 gDTHbw"]'
 
-    bot.accept_cookies('/html/body/div[3]/div[1]/div[1]/div/button[2]')
+    bot.accept_cookies('//button[@id="save"]', 
+                        'gdpr-consent-notice')
 #%%
-    # Xpaths from Wikipedia 
-    bot.find_search_bar('//input[@class="vector-search-box-input"]', '//div[@class="ConsentManager__Overlay-np32r2-0 gDTHbw"]')
-#%%
-
-    bot.input_something_into_search_bar('Rick and Morty')
-
+    bot.find_search_bar_then_pass_input_into_search_bar(
+        '//*[@id="header-location"]',
+        'London'
+    )
     
 #%% 
     # Xpath from Wikipedia 
     bot.find_container('//div[@id="bodyContent"]')
  
 
-
+# %%
+    bot.find_container('//div[@class="css-p1r19z-Primary e16evaer17"]')
+    bot._save_image('Londonerry Houses', '//li[@class="css-1dqywv5-Slide e16xseoz1"]')
 # %%
