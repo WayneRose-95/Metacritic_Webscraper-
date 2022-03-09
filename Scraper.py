@@ -39,11 +39,11 @@ class Scraper:
         else:
             self.driver = Chrome(ChromeDriverManager().install())
     
-    def land_first_page(self, page_url):
+    def land_first_page(self, page_url : str):
         home_page = self.driver.get(page_url)
         return home_page
 
-    def accept_cookies(self, cookies_button_xpath, iframe=None): 
+    def accept_cookies(self, cookies_button_xpath : str, iframe=None): 
         #TODO: Create a unittest for this method 
         time.sleep(4)
         try: # To find if the accept cookies button is within a frame
@@ -60,7 +60,7 @@ class Scraper:
         time.sleep(2)
         return True  
     
-    def find_search_bar_then_pass_input_into_search_bar(self, search_bar_xpath, text):
+    def find_search_bar_then_pass_input_into_search_bar(self, search_bar_xpath : str, text : str):
         try:
             
             search_bar_element = self.driver.find_element(By.XPATH, search_bar_xpath)
@@ -100,24 +100,41 @@ class Scraper:
             last_height = new_height
 
 
-    def collect_page_links(self, container_xpath : str, attribute = 'href' or 'src'):
-        #TODO: Try find_elements(By.CSS_SELECTOR)
+    def extract_the_page_links(self, container_xpath : str, attribute = 'href' or 'src'):
+        # find the container with the links
         page_container = self.driver.find_elements(By.XPATH, container_xpath)
         page_links_list = []
 
         page_counter = 0 
-    
+        
+        # iterate through these links 
         for url in page_container:
             link_to_page = url.get_attribute(attribute)
             page_links_list.append(link_to_page)
             page_counter += 1
-       
+
+        # For a sanity check, print the list of links and the number of pages 
+
         print(page_links_list)
         print(f'Pages visited: {len(page_links_list)}')
         return page_links_list
+
+
+    def collect_number_of_pages(self, last_page_number : str ):
+        try:
+
+            last_page_number_element = (self.driver.find_element(By.CSS_SELECTOR, last_page_number).text)
+            print(last_page_number_element)
+            print(f"Max Page = {last_page_number_element}..")
+            last_page_number = int(last_page_number_element)
+
+        except NoSuchElementException:
+            print('Element not found. Exiting...')
+
+        return last_page_number
+               
         
-        
-    def find_container(self, container_xpath):
+    def find_container(self, container_xpath : str):
 
         try: 
             container = self.driver.find_element(By.XPATH, container_xpath)
@@ -127,7 +144,7 @@ class Scraper:
 
     
 
-    def _save_image(self, sub_category_name: str, image_xpath):
+    def _save_image(self, sub_category_name: str, image_xpath : str):
         """
         Method to download every product image (jpg format) to local and/or s3_bucket locations.
     
@@ -167,10 +184,12 @@ if __name__ == "__main__":
         'London'
     )
 #%%
-    bot.collect_page_links('//a[@class="title"]', 'href')
+    bot.extract_the_page_links('//a[@class="title"]', 'href')
 
 #%%
-    
+    bot.collect_number_of_pages('#main_content > div.browse.new_releases > div.content_after_header > \
+        div > div.next_to_side_col > div > div.marg_top1 > div > div > div.pages > ul > \
+        li.page.last_page > a' )
 #%%
     bot.infinite_scroll_down_page()    
 #%% 
