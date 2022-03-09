@@ -20,15 +20,13 @@ class Scraper:
 
     Methods to Add: 
 
-    1. Save_Json 
+    1. Save_Json
 
-    2. Collect Page Links 
+    2. Manipulate Filters Method (if applicable)
 
-    3. Collect Number of Pages 
+    3. Click Next Page? 
 
-    4. Manipulate Filters Method (if applicable)
-
-    5. Click Next Page? 
+    4. Debug the Save Images Error
 
 
     '''
