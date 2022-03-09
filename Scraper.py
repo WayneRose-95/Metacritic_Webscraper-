@@ -18,6 +18,19 @@ class Scraper:
     '''
     A class which houses all generic methods for webscraping 
 
+    Methods to Add: 
+
+    1. Save_Json 
+
+    2. Collect Page Links 
+
+    3. Collect Number of Pages 
+
+    4. Manipulate Filters Method (if applicable)
+
+    5. Click Next Page? 
+
+
     '''
     def __init__(self, options=None):
 
@@ -95,6 +108,8 @@ class Scraper:
             print(container)
         except:
             raise Exception('There was no element')
+
+    
 
     def _save_image(self, sub_category_name: str, image_xpath):
         """
