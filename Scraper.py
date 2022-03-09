@@ -99,6 +99,22 @@ class Scraper:
                 break
             last_height = new_height
 
+
+    def collect_page_links(self, container_xpath : str, attribute = 'href' or 'src'):
+        #TODO: Try find_elements(By.CSS_SELECTOR)
+        page_container = self.driver.find_elements(By.XPATH, container_xpath)
+        page_links_list = []
+
+        page_counter = 0 
+    
+        for url in page_container:
+            link_to_page = url.get_attribute(attribute)
+            page_links_list.append(link_to_page)
+            page_counter += 1
+       
+        print(page_links_list)
+        print(f'Pages visited: {len(page_links_list)}')
+        return page_links_list
         
         
     def find_container(self, container_xpath):
@@ -134,7 +150,7 @@ class Scraper:
 if __name__ == "__main__":
     bot = Scraper()
     # zoopla page = "https://www.zoopla.co.uk/"    
-    bot.land_first_page("https://www.cbr.com")
+    bot.land_first_page("https://www.metacritic.com")
 
 #%%
     # Xpaths from cbr.com
@@ -150,7 +166,11 @@ if __name__ == "__main__":
         '//*[@id="header-location"]',
         'London'
     )
+#%%
+    bot.collect_page_links('//a[@class="title"]', 'href')
 
+#%%
+    
 #%%
     bot.infinite_scroll_down_page()    
 #%% 
