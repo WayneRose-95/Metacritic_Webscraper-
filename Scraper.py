@@ -65,13 +65,28 @@ class Scraper:
             
         return search_bar_element, text
 
-       
-    def input_something_into_search_bar(self, text):
-        search_bar = self.find_search_bar('//input[@class="vector-search-box-input"]')
+    def infinite_scroll_down_page(self):
 
-        if search_bar:
-            search_bar.send_keys(text)
-            search_bar.send_keys(Keys.ENTER)
+        SCROLL_PAUSE_TIME = 5
+
+        # Get scroll height
+        last_height = self.driver.execute_script("return document.body.scrollHeight")
+
+        while True:
+
+            # Scroll down to bottom
+            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+            # Wait to load page
+            time.sleep(SCROLL_PAUSE_TIME)
+
+            # Calculate new scroll height and compare with last scroll height
+            new_height = self.driver.execute_script("return document.body.scrollHeight")
+            if new_height == last_height:
+                break
+            last_height = new_height
+
+        
         
     def find_container(self, container_xpath):
 
@@ -102,13 +117,16 @@ class Scraper:
 #%%
 
 if __name__ == "__main__":
-    bot = Scraper()    
-    bot.land_first_page("https://www.zoopla.co.uk/")
+    bot = Scraper()
+    # zoopla page = "https://www.zoopla.co.uk/"    
+    bot.land_first_page("https://www.cbr.com")
 
 #%%
     # Xpaths from cbr.com
     # '/html/body/div[3]/div[1]/div[1]/div/button[2]', 
     # '//div[@class="ConsentManager__Overlay-np32r2-0 gDTHbw"]'
+
+    # Xpaths from zoopla.co.uk
 
     bot.accept_cookies('//button[@id="save"]', 
                         'gdpr-consent-notice')
@@ -117,13 +135,18 @@ if __name__ == "__main__":
         '//*[@id="header-location"]',
         'London'
     )
-    
+
+#%%
+    bot.infinite_scroll_down_page()    
 #%% 
     # Xpath from Wikipedia 
     bot.find_container('//div[@id="bodyContent"]')
  
 
 # %%
+    #TODO: Solve the error with the _save_image method. 
+    # Directory is created, but images are not saved inside. 
+
     bot.find_container('//div[@class="css-p1r19z-Primary e16evaer17"]')
     bot._save_image('Londonerry Houses', '//li[@class="css-1dqywv5-Slide e16xseoz1"]')
 # %%
