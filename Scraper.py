@@ -6,7 +6,6 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import NoSuchFrameException
-from Filtrations import WebsiteFiltration
 # from selenium.webdriver.support.ui import WebDriverWait
 import time
 import os 
@@ -145,9 +144,16 @@ class Scraper:
         filter_button = self.driver.find_element(By.XPATH, './/div[@class="mcmenu dropdown style2 genre"]/button')
         filter_button.click()
         
-        filter_container = self.extract_the_page_links('//ul[@class="dropdown dropdown_open"]//li/a', 'href')
+        # filter_container = self.extract_the_page_links('//ul[@class="dropdown dropdown_open"]//li/a', 'href')
+        filter_container = self.driver.find_elements(By.XPATH, '//ul[@class="dropdown dropdown_open"]//li/a')
+        filter_container_list = []
 
-        return filter_container
+        for url in filter_container:
+            link_to_page = url.get_attribute('href')
+            filter_container_list.append(link_to_page)
+
+        print(filter_container_list) 
+        return filter_container_list
      
 
 
