@@ -6,6 +6,7 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import NoSuchFrameException
+from Filtrations import WebsiteFiltration
 # from selenium.webdriver.support.ui import WebDriverWait
 import time
 import os 
@@ -42,7 +43,7 @@ class Scraper:
         return home_page
 
     def accept_cookies(self, cookies_button_xpath : str, iframe=None): 
-        #TODO: Create a unittest for this method 
+         
         time.sleep(4)
         try: # To find if the accept cookies button is within a frame
             cookies_iframe = self.driver.find_element(By.ID, iframe) 
@@ -140,7 +141,25 @@ class Scraper:
         except:
             raise Exception('There was no element')
 
-    
+    def apply_filter_list(self):
+        filter_button = self.driver.find_element(By.XPATH, './/div[@class="mcmenu dropdown style2 genre"]/button')
+        filter_button.click()
+        
+        filter_container = self.driver.find_elements(By.XPATH, './/ul[@class="dropdown dropdown_open"]')
+
+        filter_list_of_links = self.driver.find_elements(By.XPATH, '//li[*]/a')
+        filter_container_list = []
+
+        for item in filter_list_of_links:
+            item.get_attribute('href')
+            filter_container_list.append(item)
+
+        print(len(filter_container_list))
+      
+            
+        
+     
+
 
     def _save_image(self, sub_category_name: str, image_xpath : str):
         """
@@ -194,7 +213,9 @@ if __name__ == "__main__":
     # Xpath from Wikipedia 
     bot.find_container('//div[@id="bodyContent"]')
  
+#%%
 
+    bot.apply_filter_list()
 # %%
     #TODO: Solve the error with the _save_image method. 
     # Directory is created, but images are not saved inside. 
