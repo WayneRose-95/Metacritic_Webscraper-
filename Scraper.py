@@ -145,16 +145,16 @@ class Scraper:
         filter_button = self.driver.find_element(By.XPATH, './/div[@class="mcmenu dropdown style2 genre"]/button')
         filter_button.click()
         
-        filter_container = self.driver.find_elements(By.XPATH, './/ul[@class="dropdown dropdown_open"]')
+        filter_container = self.driver.find_element(By.XPATH, '//ul[@class="dropdown dropdown_open"]')
 
-        filter_list_of_links = self.driver.find_elements(By.XPATH, '//li[*]/a')
-        filter_container_list = []
+        filter_list = filter_container.find_element(By.XPATH, '//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[1]/div[1]/div[2]/ul/li[*]/a').get_attribute('href')
+        # filter_container_list = []
 
-        for item in filter_list_of_links:
-            item.get_attribute('href')
-            filter_container_list.append(item)
+        # for item in filter_list:
+        #     item.get_attribute('href')
+        #     filter_container_list.append(item)
 
-        print(len(filter_container_list))
+        print(filter_list)
       
             
         
