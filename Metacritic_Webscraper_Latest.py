@@ -50,12 +50,11 @@ class MetaCriticScraper:
             self.driver.set_page_load_timeout(30)
             self.driver.get(url)
         except TimeoutException as ex:
-            isrunning = 0
             print("Exception has been thrown. " + str(ex))
             self.driver.quit()
 
         
-        # driver.get(self.root)
+       
         self.accept_cookies('//button[@id="onetrust-accept-btn-handler"]')
         self.page_counter = 0
 
@@ -205,10 +204,6 @@ class MetaCriticScraper:
                 # Code that runs when 'conditionA' and
                 # 'conditionB' are both True
 
-    #TODO: make a method which makes the scraper go to these links
-    # This link should help: 
-    # https://pretagteam.com/question/loop-through-links-and-scrape-data-from-resulting-pages-using-selenium-python-duplicate
-
     def save_json(self, all_products_dictionary, sub_category_name):
         #TODO: Run a unittest on this method to check that a json file is created
         file_to_convert = all_products_dictionary
@@ -259,7 +254,7 @@ class MetaCriticScraper:
 
 
         
-       # new syntax for driver.find_elements(By.XPATH, "xpath string")
+# new syntax for driver.find_elements(By.XPATH, "xpath string")
 if __name__ == '__main__':     
     new_scraper = MetaCriticScraper("https://www.metacritic.com/")
     # new_scraper.choose_game_category()
