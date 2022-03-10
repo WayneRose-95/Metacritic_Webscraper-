@@ -140,20 +140,32 @@ class Scraper:
         except:
             raise Exception('There was no element')
 
-    def apply_filter_list(self):
-        filter_button = self.driver.find_element(By.XPATH, './/div[@class="mcmenu dropdown style2 genre"]/button')
-        filter_button.click()
+    def apply_filter_list(self, filter_container_xpath : str , filter_button=None):
+
+        if filter_button:
+            filter_button = self.driver.find_element(By.XPATH, filter_button)
+            filter_button.click()
+
+             # filter_container = self.extract_the_page_links('//ul[@class="dropdown dropdown_open"]//li/a', 'href')
+            filter_container = self.driver.find_elements(By.XPATH, filter_container_xpath)
+            filter_container_list = []
+
+            for url in filter_container:
+                link_to_page = url.get_attribute('href')
+                filter_container_list.append(link_to_page)
+            print(filter_container_list)
+        else:
         
-        # filter_container = self.extract_the_page_links('//ul[@class="dropdown dropdown_open"]//li/a', 'href')
-        filter_container = self.driver.find_elements(By.XPATH, '//ul[@class="dropdown dropdown_open"]//li/a')
-        filter_container_list = []
+            # filter_container = self.extract_the_page_links('//ul[@class="dropdown dropdown_open"]//li/a', 'href')
+            filter_container = self.driver.find_elements(By.XPATH, filter_container_xpath)
+            filter_container_list = []
 
-        for url in filter_container:
-            link_to_page = url.get_attribute('href')
-            filter_container_list.append(link_to_page)
+            for url in filter_container:
+                link_to_page = url.get_attribute('href')
+                filter_container_list.append(link_to_page)
 
-        print(filter_container_list) 
-        return filter_container_list
+            print(filter_container_list) 
+            return filter_container_list
      
 
 
@@ -211,7 +223,11 @@ if __name__ == "__main__":
  
 #%%
 
-    bot.apply_filter_list()
+    bot.apply_filter_list(
+        '//ul[@class="dropdown dropdown_open"]//li/a',
+        './/div[@class="mcmenu dropdown style2 genre"]/button'
+        
+    )
 # %%
     #TODO: Solve the error with the _save_image method. 
     # Directory is created, but images are not saved inside. 
