@@ -98,7 +98,7 @@ class Scraper:
             last_height = new_height
 
 
-    def extract_the_page_links(self, container_xpath : str, attribute = 'href' or 'src'):
+    def extract_the_page_links(self, container_xpath : str, attribute : str = 'href' or 'src'):
         # find the container with the links
         page_container = self.driver.find_elements(By.XPATH, container_xpath)
         page_links_list = []
@@ -167,7 +167,7 @@ class Scraper:
             print(filter_container_list) 
             return filter_container_list
      
-
+    
 
     def _save_image(self, sub_category_name: str, image_xpath : str):
         """
@@ -191,47 +191,4 @@ class Scraper:
 
 if __name__ == "__main__":
     bot = Scraper()
-    # zoopla page = "https://www.zoopla.co.uk/"    
-    bot.land_first_page("https://www.metacritic.com")
 
-#%%
-    # Xpaths from cbr.com
-    # '/html/body/div[3]/div[1]/div[1]/div/button[2]', 
-    # '//div[@class="ConsentManager__Overlay-np32r2-0 gDTHbw"]'
-
-    # Xpaths from zoopla.co.uk
-
-    bot.accept_cookies('//button[@id="save"]', 
-                        'gdpr-consent-notice')
-#%%
-    bot.find_search_bar_then_pass_input_into_search_bar(
-        '//*[@id="header-location"]',
-        'London'
-    )
-#%%
-    bot.extract_the_page_links('//a[@class="title"]', 'href')
-
-#%%
-    bot.collect_number_of_pages('#main_content > div.browse.new_releases > div.content_after_header > \
-        div > div.next_to_side_col > div > div.marg_top1 > div > div > div.pages > ul > \
-        li.page.last_page > a' )
-#%%
-    bot.infinite_scroll_down_page()    
-#%% 
-    # Xpath from Wikipedia 
-    bot.find_container('//div[@id="bodyContent"]')
- 
-#%%
-
-    bot.apply_filter_list(
-        '//ul[@class="dropdown dropdown_open"]//li/a',
-        './/div[@class="mcmenu dropdown style2 genre"]/button'
-        
-    )
-# %%
-    #TODO: Solve the error with the _save_image method. 
-    # Directory is created, but images are not saved inside. 
-
-    bot.find_container('//div[@class="css-p1r19z-Primary e16evaer17"]')
-    bot._save_image('Londonerry Houses', '//li[@class="css-1dqywv5-Slide e16xseoz1"]')
-# %%
