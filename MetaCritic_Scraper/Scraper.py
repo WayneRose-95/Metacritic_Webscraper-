@@ -169,6 +169,7 @@ class Scraper:
      
     
 
+
     def _save_image(self, sub_category_name: str, image_xpath : str):
         """
         Method to download every product image (jpg format) to local and/or s3_bucket locations.
@@ -178,14 +179,26 @@ class Scraper:
         """
         image_category = sub_category_name
         image_name = f'{sub_category_name}-image'
-        src_list = self.driver.find_elements(By.XPATH, image_xpath).text()
+        src_list = self.driver.find_elements(By.XPATH, image_xpath)
+        print(src_list)
         # //*[@id="product-gallery"]/div[2]/div[2]/div[2]/img
         
         image_path = f'images/{image_category}'
         if not os.path.exists(image_path):
             os.makedirs(image_path)         
-        for i,src in enumerate(src_list[:-1],1):   
+        for i,src in enumerate(src_list[:-1],1):
+            print(src)   
             urllib.request.urlretrieve(src, f'{image_path}/{image_name}.{i}.jpg')
+
+    #TODO: Making another method to debug how to save an image. 
+    # Need to test it out without getting an Attribute Error....
+    # def download_image(self):
+
+    #     image_name = self.driver.find_element(By.XPATH, '//img[@class="product_image large_image"]')
+    #     src_image_name = image_name.get_attribute('src')
+    #     alt_image_name = image_name.get_attribute('alt')
+    #     print(src_image_name)
+    #     print(alt_image_name)
 
 #%%
 
