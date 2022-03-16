@@ -182,9 +182,13 @@ class Scraper:
         return self.s3_client
 
 
-    def save_image(self):
-        
-        
+    def save_image(self, image_name_xpath, image_src_xpath):
+        '''
+        Method to save image srcs inside a dictionary with unique IDs. 
+
+        Returns:
+        self.image_dict = A Dictionary which contains data on the image. 
+        '''
         self.image_dict = {
             'ID': [],
             'Friendly_ID': [],
@@ -192,8 +196,8 @@ class Scraper:
             'Image_Link': []
         }
 
-        image_name = self.driver.find_element(By.XPATH, '//*[@id="main"]/div/div[1]/div[1]/div[3]/div/div/div[1]/div/img').get_attribute('alt')
-        image_src = self.driver.find_element(By.XPATH, '//*[@id="main"]/div/div[1]/div[1]/div[3]/div/div/div[1]/div/img').get_attribute('src')
+        image_name = self.driver.find_element(By.XPATH, image_name_xpath).get_attribute('alt')
+        image_src = self.driver.find_element(By.XPATH, image_src_xpath).get_attribute('src')
 
         self.image_xpath_dict = {
             'ID': uuid.uuid4(),
@@ -209,40 +213,10 @@ class Scraper:
                 self.image_dict[key].append('Null')
 
         print(self.image_dict)
-
-        #TODO: Set up an S3 Bucket and Upload the dictionary to it. 
-
-        # image_category = sub_category_name
-        # image_name = f'{sub_category_name}-image'
-
-        # image_list = []
-        # image_list_container = self.driver.find_elements(By.XPATH, image_container_xpath)
-
-        # for url in image_list_container:
-        #     link_to_page = url.get_attribute('src')
-        #     image_list.append(link_to_page)
-        
-
-        # self.set_s3_connection()
-        # with tempfile.TemporaryDirectory() as temp_dir:
-        #     for i,src in enumerate(image_list):   
-        #         urllib.request.urlretrieve(src, f'{temp_dir}/{image_name}.{i}.jpg')
-        #         self.s3_client.upload_file(f'{temp_dir}/{image_name}.{i}.jpg', bucket_name, f'images/{image_category}/{image_name}.{i}.jpg')
-        # if os.path.exists(temp_dir):
-        #     shutil.rmtree(temp_dir)
+        return self.image_dict
+   
     
     
-
-
-    #TODO: Making another method to debug how to save an image. 
-    # Need to test it out without getting an Attribute Error....
-    def download_image(self):
-
-        image_name = self.driver.find_element(By.XPATH, '//img[@class="product_image large_image"]')
-        src_image_name = image_name.get_attribute('src')
-        alt_image_name = image_name.get_attribute('alt')
-        print(src_image_name)
-        print(alt_image_name)
 
 #%%
 
