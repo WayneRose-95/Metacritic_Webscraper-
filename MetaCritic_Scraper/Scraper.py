@@ -23,14 +23,11 @@ class Scraper:
 
     Methods to Add: 
 
-    1. Save_Json
+    1. Save_Json 
 
-    2. Manipulate Filters Method (if applicable)
+    2. Upload_to_S3 
 
-    3. Click Next Page? 
-
-    4. Debug the Save Images Error
-
+    3. Add some WedDriverWaits to the methods 
 
     '''
     def __init__(self, options=None):
