@@ -8,9 +8,12 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import NoSuchFrameException
 # from selenium.webdriver.support.ui import WebDriverWait
 import time
-import os 
 import urllib.request
-
+import boto3
+import tempfile
+import os 
+import shutil 
+import uuid
 
 
 #%%
@@ -98,7 +101,7 @@ class Scraper:
             last_height = new_height
 
 
-    def extract_the_page_links(self, container_xpath : str, attribute : str = 'href' or 'src'):
+    def extract_the_page_links(self, container_xpath : str, attribute : str = 'href' or 'src' or 'alt'):
         # find the container with the links
         page_container = self.driver.find_elements(By.XPATH, container_xpath)
         page_links_list = []
@@ -168,40 +171,83 @@ class Scraper:
             return filter_container_list
      
     
-
-
-    def _save_image(self, sub_category_name: str, image_xpath : str):
-        """
-        Method to download every product image (jpg format) to local and/or s3_bucket locations.
     
-        Parameters: 
-            sub_category_name (str): parameter determined within the get_product_information method.
+    def set_s3_connection(self):
         """
-        image_category = sub_category_name
-        image_name = f'{sub_category_name}-image'
-        src_list = self.driver.find_elements(By.XPATH, image_xpath)
-        print(src_list)
-        # //*[@id="product-gallery"]/div[2]/div[2]/div[2]/img
+        Method to create service client connection to the S3 AWS services.
+        Returns:
+            self.s3_client: variable name for the s3 client connection 
+        """
+        self.s3_client = boto3.client('s3')
+        return self.s3_client
+
+
+    def save_image(self):
         
-        image_path = f'images/{image_category}'
-        if not os.path.exists(image_path):
-            os.makedirs(image_path)         
-        for i,src in enumerate(src_list[:-1],1):
-            print(src)   
-            urllib.request.urlretrieve(src, f'{image_path}/{image_name}.{i}.jpg')
+        
+        self.image_dict = {
+            'ID': [],
+            'Friendly_ID': [],
+            'Image_Name': [],
+            'Image_Link': []
+        }
+
+        image_name = self.driver.find_element(By.XPATH, '//*[@id="main"]/div/div[1]/div[1]/div[3]/div/div/div[1]/div/img').get_attribute('alt')
+        image_src = self.driver.find_element(By.XPATH, '//*[@id="main"]/div/div[1]/div[1]/div[3]/div/div/div[1]/div/img').get_attribute('src')
+
+        self.image_xpath_dict = {
+            'ID': uuid.uuid4(),
+            'Friendly_ID': f'{image_src.split("/")[-2]}',
+            'Image_Name': f'{image_name}',
+            'Image_Link' :f'{image_src}'
+        }
+
+        for key,value in self.image_xpath_dict.items():
+            try:   
+                self.image_dict[key].append(value)
+            except:
+                self.image_dict[key].append('Null')
+
+        print(self.image_dict)
+
+        #TODO: Set up an S3 Bucket and Upload the dictionary to it. 
+
+        # image_category = sub_category_name
+        # image_name = f'{sub_category_name}-image'
+
+        # image_list = []
+        # image_list_container = self.driver.find_elements(By.XPATH, image_container_xpath)
+
+        # for url in image_list_container:
+        #     link_to_page = url.get_attribute('src')
+        #     image_list.append(link_to_page)
+        
+
+        # self.set_s3_connection()
+        # with tempfile.TemporaryDirectory() as temp_dir:
+        #     for i,src in enumerate(image_list):   
+        #         urllib.request.urlretrieve(src, f'{temp_dir}/{image_name}.{i}.jpg')
+        #         self.s3_client.upload_file(f'{temp_dir}/{image_name}.{i}.jpg', bucket_name, f'images/{image_category}/{image_name}.{i}.jpg')
+        # if os.path.exists(temp_dir):
+        #     shutil.rmtree(temp_dir)
+    
+    
+
 
     #TODO: Making another method to debug how to save an image. 
     # Need to test it out without getting an Attribute Error....
-    # def download_image(self):
+    def download_image(self):
 
-    #     image_name = self.driver.find_element(By.XPATH, '//img[@class="product_image large_image"]')
-    #     src_image_name = image_name.get_attribute('src')
-    #     alt_image_name = image_name.get_attribute('alt')
-    #     print(src_image_name)
-    #     print(alt_image_name)
+        image_name = self.driver.find_element(By.XPATH, '//img[@class="product_image large_image"]')
+        src_image_name = image_name.get_attribute('src')
+        alt_image_name = image_name.get_attribute('alt')
+        print(src_image_name)
+        print(alt_image_name)
 
 #%%
 
 if __name__ == "__main__":
     bot = Scraper()
 
+
+# %%
