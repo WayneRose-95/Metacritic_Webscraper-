@@ -14,6 +14,8 @@ import tempfile
 import os 
 import shutil 
 import uuid
+import json
+from json import JSONEncoder
 
 
 #%%
@@ -44,12 +46,17 @@ class Scraper:
     def accept_cookies(self, cookies_button_xpath : str, iframe=None): 
          
         time.sleep(4)
-        try: # To find if the accept cookies button is within a frame
-            cookies_iframe = self.driver.find_element(By.ID, iframe) 
-            self.driver.switch_to.frame(cookies_iframe)
-            accept_cookies = self.driver.find_element(By.XPATH, cookies_button_xpath)
-            accept_cookies.click()
-           
+        try:
+            if iframe: # To find if the accept cookies button is within a frame
+                cookies_iframe = self.driver.find_element(By.ID, iframe) 
+                self.driver.switch_to.frame(cookies_iframe)
+                accept_cookies = self.driver.find_element(By.XPATH, cookies_button_xpath)
+                accept_cookies.click()
+            else:
+                accept_cookies = self.driver.find_element(By.XPATH, cookies_button_xpath)
+                accept_cookies.click()
+                print('The accept cookies button has been clicked')
+
         except NoSuchFrameException: # If it is not within a frame then find the xpath and proceed click it. 
             print('No iframe found')
             accept_cookies = self.driver.find_element(By.XPATH, cookies_button_xpath)
@@ -213,6 +220,31 @@ class Scraper:
         return self.image_dict
    
     
+    def save_json_1(self, file_name):
+        MyEncoder.encode(dict)
+        
+        if not os.path.exists('json-files'):
+            os.makedirs('json-files')
+        with open(f'json-files/{file_name}', mode='a+', encoding='utf-8-sig') as f:
+             json.dumps(f, cls=MyEncoder)
+
+    
+    def save_json_2(self, all_products_dictionary, sub_category_name):
+        file_to_convert = all_products_dictionary
+        file_name = f'{sub_category_name}-details.json'
+
+        if not os.path.exists('json-files'):
+            os.makedirs('json-files')
+        with open(f'json-files/{file_name}', mode='a+', encoding='utf-8-sig') as f:
+            json.dump(file_to_convert, f, indent=4, ensure_ascii=False) 
+            f.write('\n')
+        return True  
+    #TODO: Run a unittest on this method to check that a json file is created
+        
+class MyEncoder(JSONEncoder):
+
+        def default(self, o):
+            return o.__dict__      
     
 
 #%%
