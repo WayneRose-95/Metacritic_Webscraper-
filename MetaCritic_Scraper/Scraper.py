@@ -185,6 +185,9 @@ class Scraper:
         self.s3_client = boto3.client('s3')
         return self.s3_client
 
+    #TODO: Scraper only saves one image without a directory.
+    # Refactor this so that the image saves within a directory 
+    # Then refactor it to save multiple images inside a directory. 
 
     def save_image(self, image_name_xpath, image_src_xpath):
         '''
@@ -215,21 +218,25 @@ class Scraper:
                 self.image_dict[key].append(value)
             except:
                 self.image_dict[key].append('Null')
+        
+        image_link = f"{self.image_dict['Friendly_ID']}.jpg"
+
+        if not os.path.exists('images'):
+            os.makedirs('images')
+        with open(image_link, "wb") as file:
+            img = self.driver.find_element(By.XPATH, image_src_xpath)
+            
+            time.sleep(3)
+            file.write(img.screenshot_as_png)
+            time.sleep(3)
+        print("Product Image Downloaded")
 
         print(self.image_dict)
         return self.image_dict
    
-    
-    def save_json_1(self, file_name):
-        MyEncoder.encode(dict)
-        
-        if not os.path.exists('json-files'):
-            os.makedirs('json-files')
-        with open(f'json-files/{file_name}', mode='a+', encoding='utf-8-sig') as f:
-             json.dumps(f, cls=MyEncoder)
 
-    
-    def save_json_2(self, all_products_dictionary, sub_category_name):
+    #TODO: Work on this method next after completing the save_image method 
+    def save_json(self, all_products_dictionary, sub_category_name):
         file_to_convert = all_products_dictionary
         file_name = f'{sub_category_name}-details.json'
 
@@ -238,13 +245,9 @@ class Scraper:
         with open(f'json-files/{file_name}', mode='a+', encoding='utf-8-sig') as f:
             json.dump(file_to_convert, f, indent=4, ensure_ascii=False) 
             f.write('\n')
-        return True  
-    #TODO: Run a unittest on this method to check that a json file is created
-        
-class MyEncoder(JSONEncoder):
-
-        def default(self, o):
-            return o.__dict__      
+        return True
+     
+                 
     
 
 #%%
@@ -252,5 +255,3 @@ class MyEncoder(JSONEncoder):
 if __name__ == "__main__":
     bot = Scraper()
 
-
-# %%
