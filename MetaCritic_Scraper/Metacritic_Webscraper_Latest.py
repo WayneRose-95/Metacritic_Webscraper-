@@ -154,6 +154,7 @@ class MetaCriticScraper(Scraper):
                time.sleep(2)
            except TimeoutException:
                time.sleep(4)
+               self.driver.refresh()
                self.driver.get(url) 
                
            self.get_information_from_page()
@@ -187,4 +188,5 @@ if __name__ == '__main__':
 # Current stats (14/02/2022): 500 pages in 3145 seconds (52 minutes, 24 seconds)
 # Current stats (15/02/2022): 524 pages in 2481 seconds (41 minutes, 21 seconds)
 # Current stats (15/02/2022, 22:46pm): 524 pages in 2697 seconds (44 minutes, 57 seconds)
+# Current stats (22/03/2022): 524 pages in 2677 seconds (44 minutes, 37 seconds)
 
