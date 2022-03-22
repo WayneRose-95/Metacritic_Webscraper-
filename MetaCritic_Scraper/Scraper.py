@@ -51,7 +51,7 @@ class Scraper:
 
     def accept_cookies(self, cookies_button_xpath : str, iframe=None): 
          
-        time.sleep(4)
+        time.sleep(6)
         try:
             if iframe: # To find if the accept cookies button is within a frame
                 cookies_iframe = self.driver.find_element(By.ID, iframe) 
