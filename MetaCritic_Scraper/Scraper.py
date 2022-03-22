@@ -16,10 +16,12 @@ import shutil
 import uuid
 import json
 from json import JSONEncoder
+import itertools 
 
 
 #%%
 class Scraper: 
+
     '''
     A class which houses all generic methods for webscraping 
 
@@ -32,12 +34,16 @@ class Scraper:
     3. Add some WedDriverWaits to the methods 
 
     '''
+    
+    increasing_id = itertools.count()
     def __init__(self, options=None):
 
         if options:
             self.driver = Chrome(ChromeDriverManager().install(), options=Options())
         else:
             self.driver = Chrome(ChromeDriverManager().install())
+            
+        self.id = next(self.increasing_id)   
     
     def land_first_page(self, page_url : str):
         home_page = self.driver.get(page_url)
@@ -203,33 +209,43 @@ class Scraper:
             'Image_Link': []
         }
 
-        image_name = self.driver.find_element(By.XPATH, image_name_xpath).get_attribute('alt')
-        image_src = self.driver.find_element(By.XPATH, image_src_xpath).get_attribute('src')
+        # Find all of the srcs and alt tags from the page 
+        image_names = self.extract_the_page_links(image_name_xpath, 'alt')
+        image_links = self.extract_the_page_links(image_src_xpath, 'src')
+
+        #TODO: How to split elements from a list? 
+        
+        # Append the split src urls to a new list to populate Friendly_ID field 
+            
 
         self.image_xpath_dict = {
-            'ID': uuid.uuid4(),
-            'Friendly_ID': f'{image_src.split("/")[-2]}',
-            'Image_Name': f'{image_name}',
-            'Image_Link' :f'{image_src}'
+            'ID': str(uuid.uuid4()),
+            'Friendly_ID': f"{self.increasing_id}",
+            'Image_Name': f'{image_names}',
+            'Image_Link' :f'{image_links}'
         }
-
+       
+    
         for key,value in self.image_xpath_dict.items():
             try:   
-                self.image_dict[key].append(value)
+                self.image_dict[key] = value
             except:
-                self.image_dict[key].append('Null')
+                self.image_dict[key] = 'Null'
         
-        image_link = f"{self.image_dict['Friendly_ID']}.jpg"
 
         if not os.path.exists('images'):
             os.makedirs('images')
-        with open(image_link, "wb") as file:
-            img = self.driver.find_element(By.XPATH, image_src_xpath)
-            
-            time.sleep(3)
-            file.write(img.screenshot_as_png)
-            time.sleep(3)
-        print("Product Image Downloaded")
+            try:
+                for i,link in enumerate(image_names):
+                    
+                    with open(f'images/{link}_{i}.jpg', "wb") as file:
+                        img = self.driver.find_element(By.XPATH, image_src_xpath)
+                        time.sleep(3)
+                        file.write(img.screenshot_as_png)
+                        time.sleep(3)
+            except:
+                print('There was an error')
+       
 
         print(self.image_dict)
         return self.image_dict
