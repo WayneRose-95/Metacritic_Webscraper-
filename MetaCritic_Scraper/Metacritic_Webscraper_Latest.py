@@ -40,7 +40,12 @@ class MetaCriticScraper(Scraper):
 
         self.information_dict =  {}
 
-        
+        # self.game_category_list = [
+        #     'action',
+        #     'adventure'
+        #     'fighting'
+        # ]
+
         
    
     def choose_game_category(self):
@@ -59,11 +64,24 @@ class MetaCriticScraper(Scraper):
 
 
     def choose_genre(self):
-        choose_fighting_genre = self.driver.find_element(By.XPATH, '//*[@id="main"]/div[4]/div/div[2]/div[2]/div[1]/div/div/div/ul/li[3]/a').get_attribute("href")
-        fighting_genre_url = print(choose_fighting_genre)
-        self.driver.get(choose_fighting_genre)
-        return fighting_genre_url
-        
+
+        '''
+        Currently works for games, tv and music 
+
+        '''
+        genre_container = self.driver.find_elements(By.XPATH, 
+            '//ul[@class="genre_nav"]//a')
+        print(genre_container)
+        print(len(genre_container))
+
+        list_of_genres = []
+        for item in genre_container:
+            list_of_genres.append(item.get_attribute('href'))
+
+        print(list_of_genres)
+        return list_of_genres
+
+   
 
     def click_next_page(self, page):
 
@@ -127,16 +145,24 @@ class MetaCriticScraper(Scraper):
         # Goes to Games > Games Home > 'Search by Genre': Fighting > Scrapes 6 pages of content 
         self.choose_game_category()
         self.choose_genre()
-
+        
+    
         all_pages_list = []
 
-        #TODO: steps for future 
-        #range needs to be set dynamically instead of hardcoded
+        # filter_list = self.apply_filter_list(
+        # '//ul[@class="dropdown dropdown_open"]//li/a',
+        # '//div[@class="mcmenu dropdown style2 genre"]'
+    # )
+
+        # Collect the number of pages on the page to use in range function
+
         page_value = self.collect_number_of_pages(
             '#main_content > div.browse.new_releases > div.content_after_header > \
             div > div.next_to_side_col > div > div.marg_top1 > div > div > div.pages > ul > \
             li.page.last_page > a'
         )
+        # Set the final range to +1 more to satisfy the range function
+
         range_final = page_value + 1
         # for page in range(2,rangefinal):
         for page in range(2,range_final):
@@ -147,17 +173,17 @@ class MetaCriticScraper(Scraper):
         all_pages_list.extend(self.extract_the_page_links('//a[@class="title"]', 'href'))
 
         for url in all_pages_list:
-           time.sleep(1)
-           #TODO: use a try and except statement to catch the timeout exception. 
-           try:
-               self.driver.get(url)
-               time.sleep(2)
-           except TimeoutException:
-               time.sleep(4)
-               self.driver.refresh()
-               self.driver.get(url) 
-               
-           self.get_information_from_page()
+            time.sleep(1)
+            #TODO: use a try and except statement to catch the timeout exception. 
+            try:
+                self.driver.get(url)
+                time.sleep(2)
+            except TimeoutException:
+                time.sleep(4)
+                self.driver.refresh()
+                self.driver.get(url) 
+                
+            self.get_information_from_page()
         
         
 
@@ -165,9 +191,9 @@ class MetaCriticScraper(Scraper):
         
 # new syntax for driver.find_elements(By.XPATH, "xpath string")
 if __name__ == '__main__':     
-    new_scraper = MetaCriticScraper("https://www.metacritic.com/")
+    new_scraper = MetaCriticScraper("https://www.metacritic.com/tv")
     # new_scraper.choose_game_category()
-    # new_scraper.choose_genre()
+    new_scraper.choose_genre()
     # new_scraper.collect_page_links()
     # new_scraper.get_information_from_page()
     # new_scraper.click_next_page()
@@ -177,10 +203,10 @@ if __name__ == '__main__':
     # new_scraper.process_page_links()
 
     # Timing how long it takes to scrape from 100 pages 
-    t1_start = perf_counter()
-    new_scraper.sample_scraper()
-    t1_stop = perf_counter()
-    print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
+    # t1_start = perf_counter()
+    # new_scraper.sample_scraper()
+    # t1_stop = perf_counter()
+    # print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
 
 # Current stats(1/01/2022): 100 pages in 226 seconds (2 minutes, 4 seconds.)
 # Current stats(27/01/2022): 500 pages in 2828 seconds (47 minutes, 8 seconds)
