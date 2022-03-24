@@ -40,7 +40,7 @@ class MetaCriticScraper(Scraper):
                    'User_Score': '//div[@class="userscore_wrap feature_userscore"]/a/div',
                    'Developer': '//li[@class="summary_detail developer"]/span[2]/a', 
                    'Description': './/li[@class="summary_detail product_summary"]' } 
-                   
+
         #NEW Category Dict to use in choose_category method? 
         self.category_dict = {
             'Game Xpath': '//*[@id="primary_nav_item_games"]/nav/div/div[1]/div[2]/ul/li[1]/a',
@@ -183,7 +183,8 @@ class MetaCriticScraper(Scraper):
         # Goes to Games > Games Home > 'Search by Genre': Fighting > Scrapes 6 pages of content 
         self.choose_genre()
         
-    
+        #TODO populate the all_pages_list with hrefs from ALL pages in the 'Games' section of the website. 
+        
         all_pages_list = []
 
         # filter_list = self.apply_filter_list(
