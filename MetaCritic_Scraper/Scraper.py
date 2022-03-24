@@ -6,7 +6,8 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import NoSuchFrameException
-# from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import time
 import urllib.request
 import boto3
@@ -17,6 +18,8 @@ import uuid
 import json
 from json import JSONEncoder
 import itertools 
+import requests
+import certifi
 
 
 #%%
@@ -27,11 +30,8 @@ class Scraper:
 
     Methods to Add: 
 
-    1. Save_Json 
+    1. Upload_to_S3 
 
-    2. Upload_to_S3 
-
-    3. Add some WedDriverWaits to the methods 
 
     '''
     
@@ -39,7 +39,13 @@ class Scraper:
     def __init__(self, options=None):
 
         if options:
+            options = Options()
+        # list of chrome arguments 
+        # https://www.tabnine.com/code/java/methods/org.openqa.selenium.chrome.ChromeOptions/addArguments
+        # syntax = options.add_argument('--<your argument here>')
             self.driver = Chrome(ChromeDriverManager().install(), options=Options())
+            
+            
         else:
             self.driver = Chrome(ChromeDriverManager().install())
             
@@ -51,16 +57,26 @@ class Scraper:
 
     def accept_cookies(self, cookies_button_xpath : str, iframe=None): 
          
-        time.sleep(6)
+        time.sleep(4)
         try:
             if iframe: # To find if the accept cookies button is within a frame
                 cookies_iframe = self.driver.find_element(By.ID, iframe) 
                 self.driver.switch_to.frame(cookies_iframe)
-                accept_cookies = self.driver.find_element(By.XPATH, cookies_button_xpath)
-                accept_cookies.click()
+                accept_cookies_button = (
+                WebDriverWait(self.driver, 10)
+                .until(EC.presence_of_element_located((
+                    By.XPATH, cookies_button_xpath))
+                    )
+            )
+                accept_cookies_button.click()
             else:
-                accept_cookies = self.driver.find_element(By.XPATH, cookies_button_xpath)
-                accept_cookies.click()
+                accept_cookies_button = (
+                WebDriverWait(self.driver, 10)
+                .until(EC.presence_of_element_located((
+                    By.XPATH, cookies_button_xpath))
+                    )
+            )
+                accept_cookies_button.click()
                 print('The accept cookies button has been clicked')
 
         except NoSuchFrameException: # If it is not within a frame then find the xpath and proceed click it. 
@@ -73,8 +89,14 @@ class Scraper:
     
     def find_search_bar_then_pass_input_into_search_bar(self, search_bar_xpath : str, text : str):
         try:
-            
-            search_bar_element = self.driver.find_element(By.XPATH, search_bar_xpath)
+            search_bar_element = (
+                WebDriverWait(self.driver, 5)
+                .until(EC.presence_of_element_located(
+                    (By.XPATH, search_bar_xpath)
+                    )
+                    )
+            )
+           
             search_bar_element.click()
         except:
             print('no search bar found')
@@ -246,12 +268,10 @@ class Scraper:
             except:
                 print('There was an error')
        
-
+       
         print(self.image_dict)
         return self.image_dict
-   
 
-    #TODO: Work on this method next after completing the save_image method 
     def save_json(self, all_products_dictionary, sub_category_name):
         file_to_convert = all_products_dictionary
         file_name = f'{sub_category_name}-details.json'
