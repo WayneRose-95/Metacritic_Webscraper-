@@ -40,17 +40,12 @@ class MetaCriticScraper(Scraper):
 
         self.information_dict =  {}
 
-        # self.game_category_list = [
-        #     'action',
-        #     'adventure'
-        #     'fighting'
-        # ]
 
         
    
     def choose_game_category(self):
         # Choose the game category from the list
-        # TODO: Iterate over the game category list  
+        # TODO: This method should choose a category based on what is passed into the argument of the function 
         category_selection_games = self.driver.find_element(By.XPATH,'//*[@id="primary_nav_item_games"]/nav/div/div[1]/div[2]/ul/li[1]/a').get_attribute("href")
         game_url = print(category_selection_games)
         try:
@@ -87,7 +82,10 @@ class MetaCriticScraper(Scraper):
 
         #TODO: find a way to generalise this code for all pages on the website. Maybe make another method to check the last page? 
     
-        next_page_element = self.driver.find_element(By.XPATH, f'//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[{page}]/*')
+        next_page_element = self.driver.find_element(
+            By.XPATH, 
+        f'//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[{page}]/*'
+        )
         next_page_url = next_page_element.get_attribute('href')
         self.driver.get(next_page_url)
         print(next_page_url)
@@ -191,7 +189,7 @@ class MetaCriticScraper(Scraper):
         
 # new syntax for driver.find_elements(By.XPATH, "xpath string")
 if __name__ == '__main__':     
-    new_scraper = MetaCriticScraper("https://www.metacritic.com/tv")
+    new_scraper = MetaCriticScraper("https://www.metacritic.com")
     # new_scraper.choose_game_category()
     new_scraper.choose_genre()
     # new_scraper.collect_page_links()
