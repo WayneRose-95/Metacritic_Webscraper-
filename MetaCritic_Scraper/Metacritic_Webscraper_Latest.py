@@ -8,6 +8,7 @@ import json
 from selenium.webdriver import Chrome
 # from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from urllib3 import Timeout
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import NoSuchElementException
@@ -30,31 +31,70 @@ class MetaCriticScraper(Scraper):
         self.accept_cookies('//button[@id="onetrust-accept-btn-handler"]')
         self.page_counter = 0
 
-        self.xpaths_dict = {'Title': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/a/h1', 
+        #TODO: Adjust the keys of the self.xpaths_dict to take the headings from the pages. 
+        self.xpaths_dict = {
+                    'Title': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/a/h1', 
                    'Platform': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/span', 
                    'Release_Date': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[3]/ul/li[2]/span[2]',
                    'MetaCritic_Score': '//a[@class="metascore_anchor"]/div', 
                    'User_Score': '//div[@class="userscore_wrap feature_userscore"]/a/div',
                    'Developer': '//li[@class="summary_detail developer"]/span[2]/a', 
                    'Description': './/li[@class="summary_detail product_summary"]' } 
+                   
+        #NEW Category Dict to use in choose_category method? 
+        self.category_dict = {
+            'Game Xpath': '//*[@id="primary_nav_item_games"]/nav/div/div[1]/div[2]/ul/li[1]/a',
+            'Music Xpath': '//*[@id="primary_nav_item_music"]/nav/div[2]/ul/li[1]/a',
+            'TV Xpath': '//*[@id="primary_nav_item_tv"]/nav/div/div[1]/div[2]/ul/li[1]/a', 
+            'Movie Xpath': '//*[@id="primary_nav_item_movies"]/nav/div/div[1]/div[2]/ul/li[6]/a'}
 
         self.information_dict =  {}
 
 
         
    
-    def choose_game_category(self):
+    def choose_category(self, category_selection : str = 'game' or 'music'):
+
+        '''
+        Currently works for games and music pages 
+
+        '''
         # Choose the game category from the list
         # TODO: This method should choose a category based on what is passed into the argument of the function 
-        category_selection_games = self.driver.find_element(By.XPATH,'//*[@id="primary_nav_item_games"]/nav/div/div[1]/div[2]/ul/li[1]/a').get_attribute("href")
-        game_url = print(category_selection_games)
-        try:
 
-            self.driver.get(category_selection_games)
-        except TimeoutException:
-            time.sleep(4)
-            self.driver.get(category_selection_games)
-        return game_url
+        # Make a function which goes to the page of a section based on what is passed 
+        # Into the argument of the function. 
+
+        # Get a list of hrefs of the pages that you want to go to. 
+
+        # List of hrefs to visit 
+        href_list = [
+            "https://www.metacritic.com/game",
+            "https://www.metacritic.com/music",
+            "https://www.metacritic.com/tv", 
+            "https://www.metacritic.com/browse/movies/score/metascore/all/filtered?sort=desc"
+            
+
+        ]
+        if category_selection == 'game':
+            try:
+                self.driver.get(href_list[0])
+            except TimeoutException:
+                self.driver.refresh()
+                time.sleep(3)
+                self.driver.get(href_list[0])
+        else:
+            try:
+                self.driver.get(href_list[1])
+            except TimeoutException:
+                self.driver.refresh()
+                time.sleep(3)
+                self.driver.get(href_list[1])
+        
+        # Game Xpath: '//*[@id="primary_nav_item_games"]/nav/div/div[1]/div[2]/ul/li[1]/a'
+      
+        print(f'Navigating to: {category_selection}')
+        return category_selection 
 
 
 
@@ -141,7 +181,6 @@ class MetaCriticScraper(Scraper):
 
     def sample_scraper(self):
         # Goes to Games > Games Home > 'Search by Genre': Fighting > Scrapes 6 pages of content 
-        self.choose_game_category()
         self.choose_genre()
         
     
@@ -190,8 +229,7 @@ class MetaCriticScraper(Scraper):
 # new syntax for driver.find_elements(By.XPATH, "xpath string")
 if __name__ == '__main__':     
     new_scraper = MetaCriticScraper("https://www.metacritic.com")
-    # new_scraper.choose_game_category()
-    new_scraper.choose_genre()
+    # new_scraper.choose_genre()
     # new_scraper.collect_page_links()
     # new_scraper.get_information_from_page()
     # new_scraper.click_next_page()
@@ -202,6 +240,7 @@ if __name__ == '__main__':
 
     # Timing how long it takes to scrape from 100 pages 
     # t1_start = perf_counter()
+    new_scraper.choose_category('music')
     # new_scraper.sample_scraper()
     # t1_stop = perf_counter()
     # print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
