@@ -14,6 +14,7 @@ from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import NoSuchElementException
 import urllib.request
 from Scraper import Scraper
+import uuid
 
 
 class MetaCriticScraper(Scraper): 
@@ -33,7 +34,9 @@ class MetaCriticScraper(Scraper):
 
         #TODO: Adjust the keys of the self.xpaths_dict to take the headings from the pages. 
         self.xpaths_dict = {
-                    'Title': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/a/h1', 
+                    'UUID': str(uuid.uuid4()),
+                    'Title': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/a/h1',
+                    'Link_to_Page': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/a', 
                    'Platform': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/span', 
                    'Release_Date': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[3]/ul/li[2]/span[2]',
                    'MetaCritic_Score': '//a[@class="metascore_anchor"]/div', 
@@ -142,26 +145,39 @@ class MetaCriticScraper(Scraper):
          
             
             try:
+                # if the key in the dictionary == description. Expand the description text on the page. 
                 if key == 'Description':
+                    # Look inside the container 
                     web_element = self.driver.find_element(By.XPATH, '//div[@class="summary_wrap"]') 
 
                     try:
-                        
+                        # try to find the collapse button inside the container using relative xpath './/'
                         collapse_button = web_element.find_element(By.XPATH, './/span[@class="toggle_expand_collapse toggle_expand"]')
                         if collapse_button:
                             collapse_button.click()
                             expanded_description = web_element.find_element(By.XPATH, './/span[@class="blurb blurb_expanded"]')
                             self.information_dict[key] = expanded_description.text
-
+                    # If there is no expand button inside the description field, set the key of information dict to the 
+                    # text of the xpath found. 
                     except:
                            summary = web_element.find_element(By.XPATH, xpath)
                            self.information_dict[key] = summary.text
 
                    
                 else:
-                    web_element = self.driver.find_element(By.XPATH, xpath) 
-                    self.information_dict[key] = web_element.text 
-                
+                    # Further logic for special cases: UUID and the Link_to_Page.
+                    if key == 'UUID':
+                        self.information_dict[key] = xpath
+
+                    elif key == 'Link_to_Page':
+                        web_element = self.driver.find_element(By.XPATH, xpath).get_attribute('href') 
+                        self.information_dict[key] = web_element
+
+                        
+                    else:
+                        web_element = self.driver.find_element(By.XPATH, xpath) 
+                        self.information_dict[key] = web_element.text 
+
             except:
                 
                 self.information_dict[key] = 'Null'
@@ -229,10 +245,10 @@ class MetaCriticScraper(Scraper):
         
 # new syntax for driver.find_elements(By.XPATH, "xpath string")
 if __name__ == '__main__':     
-    new_scraper = MetaCriticScraper("https://www.metacritic.com")
+    new_scraper = MetaCriticScraper("https://www.metacritic.com/game/switch/kirby-and-the-forgotten-land?ref=hp")
     # new_scraper.choose_genre()
     # new_scraper.collect_page_links()
-    # new_scraper.get_information_from_page()
+    new_scraper.get_information_from_page()
     # new_scraper.click_next_page()
     # new_scraper.collect_number_of_pages()
     # new_scraper.click_next_page_3()
@@ -241,7 +257,7 @@ if __name__ == '__main__':
 
     # Timing how long it takes to scrape from 100 pages 
     # t1_start = perf_counter()
-    new_scraper.choose_category('music')
+    # new_scraper.choose_category('music')
     # new_scraper.sample_scraper()
     # t1_stop = perf_counter()
     # print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
