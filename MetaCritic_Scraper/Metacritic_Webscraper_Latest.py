@@ -6,7 +6,7 @@ import selenium
 import json 
 # from selenium import webdriver 
 from selenium.webdriver import Chrome
-# from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from urllib3 import Timeout
 from webdriver_manager.chrome import ChromeDriverManager
@@ -15,7 +15,6 @@ from selenium.common.exceptions import NoSuchElementException
 import urllib.request
 from Scraper import Scraper
 import uuid
-
 
 class MetaCriticScraper(Scraper): 
 
@@ -109,8 +108,8 @@ class MetaCriticScraper(Scraper):
         '''
         genre_container = self.driver.find_elements(By.XPATH, 
             '//ul[@class="genre_nav"]//a')
-        print(genre_container)
-        print(len(genre_container))
+        # print(genre_container)
+        # print(len(genre_container))
 
         list_of_genres = []
         for item in genre_container:
@@ -123,15 +122,20 @@ class MetaCriticScraper(Scraper):
 
     def click_next_page(self, page):
 
-        #TODO: find a way to generalise this code for all pages on the website. Maybe make another method to check the last page? 
+        #TODO: find a way to generalise this code for all pages on the website. 
+        # Maybe make another method to check the last page? 
     
         next_page_element = self.driver.find_element(
             By.XPATH, 
         f'//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[{page}]/*'
         )
+        # //*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[7]/a
         next_page_url = next_page_element.get_attribute('href')
-        self.driver.get(next_page_url)
-        print(next_page_url)
+       
+        self.driver.get(str(next_page_url))
+        print(page)
+        print(type(page))
+        # print(next_page_url)
         print('navigating to next page')
         
         return next_page_url
@@ -194,6 +198,42 @@ class MetaCriticScraper(Scraper):
                 # Code that runs when 'conditionA' and
                 # 'conditionB' are both True
 
+    
+    def process_page_links(self):
+        #TODO: Make this method return a list of links for all pages to visit.
+        #TODO: Look at the logic behind click_next_page method. 
+        list_of_all_pages_to_visit = []
+        
+        for url in self.choose_genre():
+            list_of_all_pages_to_visit.append(url)
+            self.driver.get(url)
+            
+            page_value = self.collect_number_of_pages(
+                '#main_content > div.browse.new_releases > div.content_after_header > \
+                div > div.next_to_side_col > div > div.marg_top1 > div > div > div.pages > ul > \
+                li.page.last_page > a'
+            )
+            range_final = page_value + 1
+            for i in range(2, range_final):
+               
+                list_of_all_pages_to_visit.extend(self.extract_the_page_links('//a[@class="title"]', 'href'))
+                self.infinite_scroll_down_page()
+                time.sleep(1)
+                try:
+                    self.driver.find_element(
+                        By.XPATH,
+                        '//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[1]/span[2]/a/span'
+                    ).click()
+                    print('navigating to next page')
+                except TimeoutException:
+                    self.driver.refresh()
+                    self.driver.find_element(
+                        By.XPATH,
+                        '//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[1]/span[2]/a/span'
+                    ).click()
+                    print('navigating to next page')
+
+
 
     def sample_scraper(self):
         # Goes to Games > Games Home > 'Search by Genre': Fighting > Scrapes 6 pages of content 
@@ -202,7 +242,7 @@ class MetaCriticScraper(Scraper):
         #TODO populate the all_pages_list with hrefs from ALL pages in the 'Games' section of the website. 
         
         all_pages_list = []
-
+        
         # filter_list = self.apply_filter_list(
         # '//ul[@class="dropdown dropdown_open"]//li/a',
         # '//div[@class="mcmenu dropdown style2 genre"]'
@@ -245,10 +285,11 @@ class MetaCriticScraper(Scraper):
         
 # new syntax for driver.find_elements(By.XPATH, "xpath string")
 if __name__ == '__main__':     
-    new_scraper = MetaCriticScraper("https://www.metacritic.com/game/switch/kirby-and-the-forgotten-land?ref=hp")
+    new_scraper = MetaCriticScraper("https://www.metacritic.com/game")
     # new_scraper.choose_genre()
     # new_scraper.collect_page_links()
-    new_scraper.get_information_from_page()
+    # new_scraper.get_information_from_page()
+    new_scraper.process_page_links()
     # new_scraper.click_next_page()
     # new_scraper.collect_number_of_pages()
     # new_scraper.click_next_page_3()

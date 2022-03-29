@@ -8,6 +8,8 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import NoSuchFrameException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from urllib3.exceptions import SSLError
+from typing import Optional
 import time
 import urllib.request
 import boto3
@@ -36,13 +38,19 @@ class Scraper:
     '''
     
     increasing_id = itertools.count()
-    def __init__(self, options=None):
+    def __init__(self, chrome_options=None):
 
-        if options:
-            options = Options()
+        if chrome_options:
+            chrome_options = Options()
         # list of chrome arguments 
         # https://www.tabnine.com/code/java/methods/org.openqa.selenium.chrome.ChromeOptions/addArguments
-        # syntax = options.add_argument('--<your argument here>')
+        # syntax = Options.add_argument('--<your argument here>')
+            
+            chrome_options.add_argument('disable-infobars')
+            chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+            chrome_options.add_experimental_option('useAutomationExtension', False)
+
+
             self.driver = Chrome(ChromeDriverManager().install(), options=Options())
             
             
@@ -55,7 +63,7 @@ class Scraper:
         home_page = self.driver.get(page_url)
         return home_page
 
-    def accept_cookies(self, cookies_button_xpath : str, iframe=None): 
+    def accept_cookies(self, cookies_button_xpath : str, iframe: Optional[str]=None): 
          
         time.sleep(4)
         try:
@@ -87,7 +95,9 @@ class Scraper:
         time.sleep(2)
         return True  
     
-    def find_search_bar_then_pass_input_into_search_bar(self, search_bar_xpath : str, text : str):
+    def manipulate_search_bar(self, search_bar_xpath : str, text : str):
+
+        # Find the element corresponding to the search bar
         try:
             search_bar_element = (
                 WebDriverWait(self.driver, 5)
@@ -96,10 +106,12 @@ class Scraper:
                     )
                     )
             )
-           
+        # Click on the element for the search bar 
             search_bar_element.click()
         except:
+            # If it is not present, close the window. 
             print('no search bar found')
+            self.driver.quit()
 
 
         if search_bar_element:
@@ -202,8 +214,31 @@ class Scraper:
             print(filter_container_list) 
             return filter_container_list
      
-    
-    
+    def download_image(self, image_xpath, sub_category_name: str):
+        image_category = sub_category_name
+        image_name = f'{sub_category_name}-image'
+        src_list = self.extract_the_page_links(image_xpath,'src')
+        # //*[@id="product-gallery"]/div[2]/div[2]/div[2]/img
+        
+        
+        try:
+            image_path = f'images/{image_category}'
+            if not os.path.exists(image_path):
+                os.makedirs(image_path)         
+            for i,src in enumerate(src_list):   
+                urllib.request.urlretrieve(src, f'{image_path}/{image_name}.{i}.jpg') 
+                
+        except SSLError:
+            for url in src_list:
+                url.replace("https", "http")
+            image_path = f'images/{image_category}'
+            if not os.path.exists(image_path):
+                os.makedirs(image_path)         
+            for i,src in enumerate(src_list):   
+                urllib.request.urlretrieve(src, f'{image_path}/{image_name}.{i}.jpg') 
+
+
+
     def set_s3_connection(self):
         """
         Method to create service client connection to the S3 AWS services.
@@ -217,7 +252,7 @@ class Scraper:
     # Refactor this so that the image saves within a directory 
     # Then refactor it to save multiple images inside a directory. 
 
-    def save_image(self, image_name_xpath, image_src_xpath):
+    def save_image_links(self, image_name_xpath, image_src_xpath):
         '''
         Method to save image srcs inside a dictionary with unique IDs. 
 
