@@ -1,8 +1,14 @@
 import csv
 from io import TextIOWrapper
+from typing import Type
 import unittest
+from unittest import mock
 from xmlrpc.client import Boolean 
 from Metacritic_Webscraper_Latest import MetaCriticScraper
+from unittest.mock import patch 
+import selenium
+from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import InvalidArgumentException
 import time 
 import tracemalloc 
 
@@ -32,6 +38,15 @@ Some of the things to add do NOT have methods associated with them yet
 tracemalloc.start()
 
 class ASOS_Webscraper_Tests(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        print('setupClass')
+    
+    @classmethod
+    def tearDownClass(cls):
+        print('teardownClass')
+
 
     def setUp(self):
         self.scraper = MetaCriticScraper("https://www.metacritic.com/")
@@ -85,7 +100,11 @@ class ASOS_Webscraper_Tests(unittest.TestCase):
         test_page = "https://www.metacritic.com/browse/games/genre/date/racing/all"
         
         self.scraper.driver.get(test_page)
-        test_input = self.scraper.collect_number_of_pages()
+        test_input = self.scraper.collect_number_of_pages(
+            '#main_content > div.browse.new_releases > div.content_after_header > \
+                div > div.next_to_side_col > div > div.marg_top1 > div > div > div.pages > ul > \
+                li.page.last_page > a'
+        )
       
         expected_output = 17
         
@@ -96,14 +115,31 @@ class ASOS_Webscraper_Tests(unittest.TestCase):
     def test_collect_page_links(self):
         test_page = "https://www.metacritic.com/browse/albums/genre/date/electronic"
         self.scraper.driver.get(test_page)
-        test_input = self.scraper.collect_page_links()
+        test_input = self.scraper.extract_the_page_links('//a[@class="title"]', 'href')
 
         self.assertIsInstance(test_input, list)
-        self.assertEqual(len(test_input), 100)
+    #     self.assertEqual(len(test_input), 100)
+
+    def test_land_first_page(self):
+            test_url = "https://www.metacritic.com/"
+            home_page = self.scraper.land_first_page(test_url)
+            self.assertIsNone(home_page)
+        
+        # #TODO: Implement unittests' patch module to simulate the webdriver
+        #     with patch('selenium.webdriver.Chrome') as mock_first_page:
+
+        #         mock_first_page.return_value = test_url
+        #         test_url = "https://www.metacritic.com/"
+        #         home_page = self.scraper.land_first_page(test_url)  
+        #         mock_first_page.assert_called_with(home_page)
+
     
-    # def test_accept_cookies(self):
+    def test_accept_cookies(self):
+        self.assertTrue(self.scraper.accept_cookies('//button[@id="onetrust-accept-btn-handler"]'))
+        
+
         #TODO: Write a unittest for this method 
-        pass
+        
 
     def test_save_json(self):
         #TODO: Debug this error: 
