@@ -6,7 +6,7 @@ import selenium
 import json 
 # from selenium import webdriver 
 from selenium.webdriver import Chrome
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver import ChromeOptions
 from selenium.webdriver.common.by import By
 from urllib3 import Timeout
 from webdriver_manager.chrome import ChromeDriverManager
@@ -14,13 +14,17 @@ from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import NoSuchElementException
 import urllib.request
 from Scraper import Scraper
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import uuid
 
 class MetaCriticScraper(Scraper): 
 
     def __init__(self, url):
         super().__init__()
-       
+        
+        chrome_options = ChromeOptions()
+        chrome_options.add_argument('--headless')
         try:
             self.driver.set_page_load_timeout(30)
             self.land_first_page(url)
@@ -28,7 +32,6 @@ class MetaCriticScraper(Scraper):
             print("Exception has been thrown. " + str(ex))
             self.driver.quit()
 
-        self.accept_cookies('//button[@id="onetrust-accept-btn-handler"]')
         self.page_counter = 0
 
         #TODO: Adjust the keys of the self.xpaths_dict to take the headings from the pages. 
@@ -52,7 +55,8 @@ class MetaCriticScraper(Scraper):
 
         self.information_dict =  {}
 
-
+    def accept_cookies(self, cookies_button_xpath: str):
+        return super().accept_cookies(cookies_button_xpath)
         
    
     def choose_category(self, category_selection : str = 'game' or 'music'):
@@ -108,15 +112,17 @@ class MetaCriticScraper(Scraper):
         '''
         genre_container = self.driver.find_elements(By.XPATH, 
             '//ul[@class="genre_nav"]//a')
-        # print(genre_container)
-        # print(len(genre_container))
+       
 
+        list_of_genre_links = []
         list_of_genres = []
         for item in genre_container:
-            list_of_genres.append(item.get_attribute('href'))
+            list_of_genre_links.append(item.get_attribute('href'))
+            list_of_genres.append(item.text)
 
+        print(list_of_genre_links)
         print(list_of_genres)
-        return list_of_genres
+        return list_of_genre_links
 
    
 
@@ -201,43 +207,72 @@ class MetaCriticScraper(Scraper):
     
     def process_page_links(self):
         #TODO: Make this method return a list of links for all pages to visit.
-        #TODO: Look at the logic behind click_next_page method. 
+        #TODO: Look at the logic behind click_next_page method.
+        self.accept_cookies('//button[@id="onetrust-accept-btn-handler"]') 
         list_of_all_pages_to_visit = []
         
         for url in self.choose_genre():
             list_of_all_pages_to_visit.append(url)
-            self.driver.get(url)
             
-            page_value = self.collect_number_of_pages(
-                '#main_content > div.browse.new_releases > div.content_after_header > \
-                div > div.next_to_side_col > div > div.marg_top1 > div > div > div.pages > ul > \
-                li.page.last_page > a'
-            )
-            range_final = page_value + 1
-            for i in range(2, range_final):
-               
-                list_of_all_pages_to_visit.extend(self.extract_the_page_links('//a[@class="title"]', 'href'))
-                self.infinite_scroll_down_page()
-                time.sleep(1)
+            temp = True 
+            while temp == True:
                 try:
-                    self.driver.find_element(
-                        By.XPATH,
-                        '//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[1]/span[2]/a/span'
+                    self.driver.implicitly_wait(5)
+                    self.driver.get(url)
+                    self.driver.switch_to.default_content()
+                    temp = False
+                except Exception:
+                    continue
+                
+            
+            try:
+                page_value = self.collect_number_of_pages(
+                    '#main_content > div.browse.new_releases > div.content_after_header > \
+                    div > div.next_to_side_col > div > div.marg_top1 > div > div > div.pages > ul > \
+                    li.page.last_page > a'
+                )
+                range_final = page_value + 1
+            except:
+                self.driver.implicitly_wait(5)
+                self.extract_the_page_links('//a[@class="title"]', 'href')
+                range_final = 0
+            for i in range(1, range_final):
+                self.driver.implicitly_wait(5)
+                list_of_all_pages_to_visit.extend(self.extract_the_page_links('//a[@class="title"]', 'href'))
+
+                try:
+                    (WebDriverWait(self.driver, 10)
+                        .until(EC.element_to_be_clickable(
+                            (By.XPATH, '//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[1]/span[2]/a/span')
+                            )
+                            )
                     ).click()
                     print('navigating to next page')
+                    time.sleep(5)
                 except TimeoutException:
-                    self.driver.refresh()
-                    self.driver.find_element(
-                        By.XPATH,
-                        '//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[1]/span[2]/a/span'
-                    ).click()
-                    print('navigating to next page')
+                    if range_final:
+                        break
+                  # self.infinite_scroll_down_page()
+                # try:
+                #     self.driver.get(f'https://www.metacritic.com/browse/games/genre/date/action/all?page={i}')
+                #     time.sleep(1)
+                # except:
+                #     self.infinite_scroll_down_page()
+                #     retry = (WebDriverWait(self.driver, 10)
+                #     .until(EC.presence_of_element_located(
+                #             (By.XPATH, '//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[1]/span[2]/a/span')
+                #             )
+                #             )
+                #     )
+                #     retry.click()
 
 
 
     def sample_scraper(self):
         # Goes to Games > Games Home > 'Search by Genre': Fighting > Scrapes 6 pages of content 
-        self.choose_genre()
+        self.accept_cookies('//button[@id="onetrust-accept-btn-handler"]')
+        genre_list = self.choose_genre()
+        self.driver.get(genre_list[2])
         
         #TODO populate the all_pages_list with hrefs from ALL pages in the 'Games' section of the website. 
         
@@ -285,7 +320,7 @@ class MetaCriticScraper(Scraper):
         
 # new syntax for driver.find_elements(By.XPATH, "xpath string")
 if __name__ == '__main__':     
-    new_scraper = MetaCriticScraper("https://www.metacritic.com/game")
+    new_scraper = MetaCriticScraper("https://www.metacritic.com/music")
     # new_scraper.choose_genre()
     # new_scraper.collect_page_links()
     # new_scraper.get_information_from_page()
@@ -295,10 +330,10 @@ if __name__ == '__main__':
     # new_scraper.click_next_page_3()
     # new_scraper.last_page()
     # new_scraper.process_page_links()
-
+    # new_scraper.choose_category('music')
     # Timing how long it takes to scrape from 100 pages 
     # t1_start = perf_counter()
-    # new_scraper.choose_category('music')
+  
     # new_scraper.sample_scraper()
     # t1_stop = perf_counter()
     # print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')

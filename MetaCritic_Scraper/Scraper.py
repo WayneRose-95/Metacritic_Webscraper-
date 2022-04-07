@@ -1,6 +1,8 @@
 #%%
+from xmlrpc.client import Boolean
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver import ChromeOptions
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
@@ -38,25 +40,9 @@ class Scraper:
     '''
     
     increasing_id = itertools.count()
-    def __init__(self, chrome_options=None):
+    def __init__(self):
 
-        if chrome_options:
-            chrome_options = Options()
-        # list of chrome arguments 
-        # https://www.tabnine.com/code/java/methods/org.openqa.selenium.chrome.ChromeOptions/addArguments
-        # syntax = Options.add_argument('--<your argument here>')
-            
-            chrome_options.add_argument('disable-infobars')
-            chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-            chrome_options.add_experimental_option('useAutomationExtension', False)
-
-
-            self.driver = Chrome(ChromeDriverManager().install(), options=Options())
-            
-            
-        else:
-            self.driver = Chrome(ChromeDriverManager().install())
-            
+        self.driver = Chrome(ChromeDriverManager().install())  
         self.id = next(self.increasing_id)   
     
     def land_first_page(self, page_url : str):
@@ -71,7 +57,7 @@ class Scraper:
                 cookies_iframe = self.driver.find_element(By.ID, iframe) 
                 self.driver.switch_to.frame(cookies_iframe)
                 accept_cookies_button = (
-                WebDriverWait(self.driver, 10)
+                WebDriverWait(self.driver, 5)
                 .until(EC.presence_of_element_located((
                     By.XPATH, cookies_button_xpath))
                     )
@@ -146,8 +132,25 @@ class Scraper:
 
 
     def extract_the_page_links(self, container_xpath : str, attribute : str = 'href' or 'src' or 'alt'):
+        
+        temp = True 
+        while temp is True:
+            try:
         # find the container with the links
-        page_container = self.driver.find_elements(By.XPATH, container_xpath)
+                self.driver.implicitly_wait(5)
+                page_container = (
+                        WebDriverWait(self.driver, 5)
+                        .until(EC.presence_of_all_elements_located(
+                            (By.XPATH, container_xpath)
+                            )
+                            )
+                    )
+                temp = False 
+            except Exception:
+                print('entered exception')
+                continue
+
+            
         page_links_list = []
 
         page_counter = 0 
