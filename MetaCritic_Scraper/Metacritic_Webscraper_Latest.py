@@ -17,14 +17,16 @@ from Scraper import Scraper
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import uuid
+import sys
+sys.path.append("/media/blair/Fast Partition/My Projects/student_projects/Metacritic_Webscraper-/MetaCritic_Scraper")
+
 
 class MetaCriticScraper(Scraper): 
 
     def __init__(self, url):
         super().__init__()
         
-        chrome_options = ChromeOptions()
-        chrome_options.add_argument('--headless')
+       
         try:
             self.driver.set_page_load_timeout(30)
             self.land_first_page(url)
@@ -36,15 +38,15 @@ class MetaCriticScraper(Scraper):
 
         #TODO: Adjust the keys of the self.xpaths_dict to take the headings from the pages. 
         self.xpaths_dict = {
-                    'UUID': str(uuid.uuid4()),
-                    'Title': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/a/h1',
-                    'Link_to_Page': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/a', 
-                   'Platform': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/span', 
-                   'Release_Date': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[3]/ul/li[2]/span[2]',
-                   'MetaCritic_Score': '//a[@class="metascore_anchor"]/div', 
-                   'User_Score': '//div[@class="userscore_wrap feature_userscore"]/a/div',
-                   'Developer': '//li[@class="summary_detail developer"]/span[2]/a', 
-                   'Description': './/li[@class="summary_detail product_summary"]' } 
+            'UUID': "",
+            'Title': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/a/h1',
+            'Link_to_Page': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/a', 
+            'Platform': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/span', 
+            'Release_Date': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[3]/ul/li[2]/span[2]',
+            'MetaCritic_Score': '//a[@class="metascore_anchor"]/div', 
+            'User_Score': '//div[@class="userscore_wrap feature_userscore"]/a/div',
+            'Developer': '//li[@class="summary_detail developer"]/span[2]/a', 
+            'Description': './/li[@class="summary_detail product_summary"]' } 
 
         #NEW Category Dict to use in choose_category method? 
         self.category_dict = {
@@ -133,7 +135,7 @@ class MetaCriticScraper(Scraper):
     
         next_page_element = self.driver.find_element(
             By.XPATH, 
-        f'//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[{page}]/*'
+            f'//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[{page}]/*'
         )
         # //*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[7]/a
         next_page_url = next_page_element.get_attribute('href')
@@ -170,8 +172,8 @@ class MetaCriticScraper(Scraper):
                     # If there is no expand button inside the description field, set the key of information dict to the 
                     # text of the xpath found. 
                     except:
-                           summary = web_element.find_element(By.XPATH, xpath)
-                           self.information_dict[key] = summary.text
+                        summary = web_element.find_element(By.XPATH, xpath)
+                        self.information_dict[key] = summary.text
 
                    
                 else:
@@ -188,8 +190,7 @@ class MetaCriticScraper(Scraper):
                         web_element = self.driver.find_element(By.XPATH, xpath) 
                         self.information_dict[key] = web_element.text 
 
-            except:
-                
+            except:     
                 self.information_dict[key] = 'Null'
 
         
@@ -213,18 +214,7 @@ class MetaCriticScraper(Scraper):
         
         for url in self.choose_genre():
             list_of_all_pages_to_visit.append(url)
-            
-            temp = True 
-            while temp == True:
-                try:
-                    self.driver.implicitly_wait(5)
-                    self.driver.get(url)
-                    self.driver.switch_to.default_content()
-                    temp = False
-                except Exception:
-                    continue
-                
-            
+            self.driver.get(url) 
             try:
                 page_value = self.collect_number_of_pages(
                     '#main_content > div.browse.new_releases > div.content_after_header > \
@@ -233,22 +223,20 @@ class MetaCriticScraper(Scraper):
                 )
                 range_final = page_value + 1
             except:
-                self.driver.implicitly_wait(5)
+                #self.driver.implicitly_wait(5)
                 self.extract_the_page_links('//a[@class="title"]', 'href')
                 range_final = 0
             for i in range(1, range_final):
-                self.driver.implicitly_wait(5)
+                #self.driver.implicitly_wait(5)
                 list_of_all_pages_to_visit.extend(self.extract_the_page_links('//a[@class="title"]', 'href'))
 
                 try:
-                    (WebDriverWait(self.driver, 10)
-                        .until(EC.element_to_be_clickable(
-                            (By.XPATH, '//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[1]/span[2]/a/span')
-                            )
-                            )
-                    ).click()
+                    (WebDriverWait(self.driver, 1)
+                    .until(EC.element_to_be_clickable(
+                        (By.XPATH, '//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[1]/span[2]/a/span')
+                        )
+                    )).click()
                     print('navigating to next page')
-                    time.sleep(5)
                 except TimeoutException:
                     if range_final:
                         break

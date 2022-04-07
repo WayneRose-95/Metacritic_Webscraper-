@@ -42,7 +42,12 @@ class Scraper:
     increasing_id = itertools.count()
     def __init__(self):
 
-        self.driver = Chrome(ChromeDriverManager().install())  
+        chrome_options = ChromeOptions()
+        #chrome_options.add_experimental_option("debuggerAddress", "127.0.0.1:9014")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--no-sandbox')
+        self.driver = Chrome(options=chrome_options)  
         self.id = next(self.increasing_id)   
     
     def land_first_page(self, page_url : str):
@@ -57,28 +62,27 @@ class Scraper:
                 cookies_iframe = self.driver.find_element(By.ID, iframe) 
                 self.driver.switch_to.frame(cookies_iframe)
                 accept_cookies_button = (
-                WebDriverWait(self.driver, 5)
+                WebDriverWait(self.driver, 0.5)
                 .until(EC.presence_of_element_located((
                     By.XPATH, cookies_button_xpath))
-                    )
+                )
             )
                 accept_cookies_button.click()
             else:
                 accept_cookies_button = (
-                WebDriverWait(self.driver, 10)
+                WebDriverWait(self.driver, 0.5)
                 .until(EC.presence_of_element_located((
                     By.XPATH, cookies_button_xpath))
-                    )
+                )
             )
-                accept_cookies_button.click()
-                print('The accept cookies button has been clicked')
+            accept_cookies_button.click()
+            print('The accept cookies button has been clicked')
 
         except NoSuchFrameException: # If it is not within a frame then find the xpath and proceed click it. 
             print('No iframe found')
             accept_cookies = self.driver.find_element(By.XPATH, cookies_button_xpath)
             accept_cookies.click()
             print('The accept cookies button has been clicked')
-        time.sleep(2)
         return True  
     
     def manipulate_search_bar(self, search_bar_xpath : str, text : str):
@@ -86,11 +90,11 @@ class Scraper:
         # Find the element corresponding to the search bar
         try:
             search_bar_element = (
-                WebDriverWait(self.driver, 5)
+                WebDriverWait(self.driver, 0.5)
                 .until(EC.presence_of_element_located(
                     (By.XPATH, search_bar_xpath)
                     )
-                    )
+                )
             )
         # Click on the element for the search bar 
             search_bar_element.click()
@@ -99,14 +103,12 @@ class Scraper:
             print('no search bar found')
             self.driver.quit()
 
-
         if search_bar_element:
             search_bar_element.send_keys(text)
             search_bar_element.send_keys(Keys.ENTER)
         else:
             raise Exception('Text failed')
         
-            
         return search_bar_element, text
 
     def infinite_scroll_down_page(self):
@@ -126,33 +128,36 @@ class Scraper:
 
             # Calculate new scroll height and compare with last scroll height
             new_height = self.driver.execute_script("return document.body.scrollHeight")
+
             if new_height == last_height:
                 break
+
             last_height = new_height
 
 
-    def extract_the_page_links(self, container_xpath : str, attribute : str = 'href' or 'src' or 'alt'):
+    def extract_the_page_links(
+        self, 
+        container_xpath : str, 
+        attribute : str = 'href' or 'src' or 'alt'
+    ):
         
         temp = True 
         while temp is True:
             try:
         # find the container with the links
-                self.driver.implicitly_wait(5)
                 page_container = (
-                        WebDriverWait(self.driver, 5)
-                        .until(EC.presence_of_all_elements_located(
-                            (By.XPATH, container_xpath)
-                            )
-                            )
+                    WebDriverWait(self.driver, 0.5)
+                    .until(EC.presence_of_all_elements_located(
+                        (By.XPATH, container_xpath)
+                        )
                     )
+                )
                 temp = False 
             except Exception:
                 print('entered exception')
                 continue
-
-            
+  
         page_links_list = []
-
         page_counter = 0 
         
         # iterate through these links 
@@ -163,19 +168,16 @@ class Scraper:
 
         # For a sanity check, print the list of links and the number of pages 
 
-        print(page_links_list)
         print(f'Pages visited: {len(page_links_list)}')
         return page_links_list
 
 
     def collect_number_of_pages(self, last_page_number : str ):
         try:
-
             last_page_number_element = (self.driver.find_element(By.CSS_SELECTOR, last_page_number).text)
             print(last_page_number_element)
             print(f"Max Page = {last_page_number_element}..")
             last_page_number = int(last_page_number_element)
-
         except NoSuchElementException:
             print('Element not found. Exiting...')
 
@@ -183,7 +185,6 @@ class Scraper:
                
         
     def find_container(self, container_xpath : str):
-
         try: 
             container = self.driver.find_element(By.XPATH, container_xpath)
             print(container)
@@ -234,7 +235,7 @@ class Scraper:
         except SSLError:
             for url in src_list:
                 url.replace("https", "http")
-            image_path = f'images/{image_category}'
+                image_path = f'images/{image_category}'
             if not os.path.exists(image_path):
                 os.makedirs(image_path)         
             for i,src in enumerate(src_list):   
@@ -297,7 +298,6 @@ class Scraper:
             os.makedirs('images')
             try:
                 for i,link in enumerate(image_names):
-                    
                     with open(f'images/{link}_{i}.jpg', "wb") as file:
                         img = self.driver.find_element(By.XPATH, image_src_xpath)
                         time.sleep(3)
