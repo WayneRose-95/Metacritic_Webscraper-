@@ -47,8 +47,9 @@ class Scraper:
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--no-sandbox')
-        self.driver = Chrome(options=chrome_options)  
-        self.id = next(self.increasing_id)   
+        self.driver =  Chrome(ChromeDriverManager().install(), options=chrome_options)
+        self.id = next(self.increasing_id)
+         
     
     def land_first_page(self, page_url : str):
         home_page = self.driver.get(page_url)
@@ -280,7 +281,7 @@ class Scraper:
             
 
         self.image_xpath_dict = {
-            'ID': str(uuid.uuid4()),
+            'ID': "",
             'Friendly_ID': f"{self.increasing_id}",
             'Image_Name': f'{image_names}',
             'Image_Link' :f'{image_links}'
@@ -288,8 +289,12 @@ class Scraper:
        
     
         for key,value in self.image_xpath_dict.items():
-            try:   
-                self.image_dict[key] = value
+            try:
+                if key == "ID":
+                    self.image_dict[key] = str(uuid.uuid4())
+                else:
+                       
+                    self.image_dict[key] = value
             except:
                 self.image_dict[key] = 'Null'
         
