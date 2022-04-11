@@ -6,158 +6,147 @@ import selenium
 import json 
 # from selenium import webdriver 
 from selenium.webdriver import Chrome
-# from selenium.webdriver.chrome.options import Options
+from selenium.webdriver import ChromeOptions
 from selenium.webdriver.common.by import By
+from urllib3 import Timeout
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import NoSuchElementException
 import urllib.request
+from Scraper import Scraper
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import uuid
+import sys
+sys.path.append("/media/blair/Fast Partition/My Projects/student_projects/Metacritic_Webscraper-/MetaCritic_Scraper")
 
-'''
-Main Class Code things to do (22/02/2022)
 
-1. Add a method to save the image(s) on the page 
+class MetaCriticScraper(Scraper): 
 
-2. DONE: Add a method to save the outputs to a .json format. 
-   (if possible, extend this to other formats)
-
-3. Add a method (or seperate class) to interact 
-   with the filters on pages
-
-'''
-
-class MetaCriticScraper: 
-
-    def __init__(self, url, options=None):
-        if options:
-            self.driver = Chrome(ChromeDriverManager().install(), options=options)
-        else:
-            self.driver = Chrome(ChromeDriverManager().install())
-
+    def __init__(self, url):
+        super().__init__()
         
-        # Temporary change in root to debug collecting information from the page. 
-        # Original root =  "https://www.metacritic.com/"
-        # Good game root = "https://www.metacritic.com/game/xbox/halo-combat-evolved"
-        # Bad game root = "https://www.metacritic.com/game/gamecube/charlies-angels"
-        # Mixed game root = "https://www.metacritic.com/game/pc/white-shadows"
-        # Sample page root = "https://www.metacritic.com/browse/games/genre/date/fighting/all"
-        # Sample page root short description = "https://www.metacritic.com/game/playstation-3/divekick"
-        # Sample page root long description = "https://www.metacritic.com/game/pc/mortal-kombat-komplete-edition"
-        self.root = "https://www.metacritic.com/"
-
-        #TODO: Implement Headless Mode into the main code and test it out  
+       
         try:
             self.driver.set_page_load_timeout(30)
-            self.driver.get(url)
+            self.land_first_page(url)
         except TimeoutException as ex:
             print("Exception has been thrown. " + str(ex))
             self.driver.quit()
 
-        
-       
-        self.accept_cookies('//button[@id="onetrust-accept-btn-handler"]')
         self.page_counter = 0
 
-        self.xpaths_dict = {'Title': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/a/h1', 
-                   'Platform': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/span', 
-                   'Release_Date': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[3]/ul/li[2]/span[2]',
-                   'MetaCritic_Score': '//a[@class="metascore_anchor"]/div', 
-                   'User_Score': '//div[@class="userscore_wrap feature_userscore"]/a/div',
-                   'Developer': '//li[@class="summary_detail developer"]/span[2]/a', 
-                   'Description': './/li[@class="summary_detail product_summary"]' } 
+        #TODO: Adjust the keys of the self.xpaths_dict to take the headings from the pages. 
+        self.xpaths_dict = {
+            'UUID': "",
+            'Title': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/a/h1',
+            'Link_to_Page': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/a', 
+            'Platform': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/span', 
+            'Release_Date': '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[3]/ul/li[2]/span[2]',
+            'MetaCritic_Score': '//a[@class="metascore_anchor"]/div', 
+            'User_Score': '//div[@class="userscore_wrap feature_userscore"]/a/div',
+            'Developer': '//li[@class="summary_detail developer"]/span[2]/a', 
+            'Description': './/li[@class="summary_detail product_summary"]' } 
+
+        #NEW Category Dict to use in choose_category method? 
+        self.category_dict = {
+            'Game Xpath': '//*[@id="primary_nav_item_games"]/nav/div/div[1]/div[2]/ul/li[1]/a',
+            'Music Xpath': '//*[@id="primary_nav_item_music"]/nav/div[2]/ul/li[1]/a',
+            'TV Xpath': '//*[@id="primary_nav_item_tv"]/nav/div/div[1]/div[2]/ul/li[1]/a', 
+            'Movie Xpath': '//*[@id="primary_nav_item_movies"]/nav/div/div[1]/div[2]/ul/li[6]/a'}
 
         self.information_dict =  {}
+
+    def accept_cookies(self, cookies_button_xpath: str):
+        return super().accept_cookies(cookies_button_xpath)
         
+   
+    def choose_category(self, category_selection : str = 'game' or 'music'):
 
-    def accept_cookies(self, cookies_button_xpath, iframe=None): 
-        #TODO: Create a unittest for this method 
-        time.sleep(4)
-        try: # To find if the accept cookies button is within a frame 
-            self.driver.switch_to.frame(iframe)
-            accept_cookies = self.driver.find_element(By.XPATH, cookies_button_xpath)
-            accept_cookies.click()
-        except NoSuchElementException: # If it is not within a frame then find the xpath and proceed click it. 
-            print('No iframe found')
-            accept_cookies = self.driver.find_element(By.XPATH, cookies_button_xpath)
-            accept_cookies.click()
-        time.sleep(2)
-        return True 
+        '''
+        Currently works for games and music pages 
 
-
-        
-    
-    def choose_game_category(self):
+        '''
         # Choose the game category from the list
-        # TODO: Iterate over the game category list  
-        category_selection_games = self.driver.find_element(By.XPATH,'//*[@id="primary_nav_item_games"]/nav/div/div[1]/div[2]/ul/li[1]/a').get_attribute("href")
-        game_url = print(category_selection_games)
-        self.driver.get(category_selection_games)
-        return game_url
+        # TODO: This method should choose a category based on what is passed into the argument of the function 
+
+        # Make a function which goes to the page of a section based on what is passed 
+        # Into the argument of the function. 
+
+        # Get a list of hrefs of the pages that you want to go to. 
+
+        # List of hrefs to visit 
+        href_list = [
+            "https://www.metacritic.com/game",
+            "https://www.metacritic.com/music",
+            "https://www.metacritic.com/tv", 
+            "https://www.metacritic.com/browse/movies/score/metascore/all/filtered?sort=desc"
+            
+
+        ]
+        if category_selection == 'game':
+            try:
+                self.driver.get(href_list[0])
+            except TimeoutException:
+                self.driver.refresh()
+                time.sleep(3)
+                self.driver.get(href_list[0])
+        else:
+            try:
+                self.driver.get(href_list[1])
+            except TimeoutException:
+                self.driver.refresh()
+                time.sleep(3)
+                self.driver.get(href_list[1])
+        
+        # Game Xpath: '//*[@id="primary_nav_item_games"]/nav/div/div[1]/div[2]/ul/li[1]/a'
+      
+        print(f'Navigating to: {category_selection}')
+        return category_selection 
 
 
-    # TODO: make a method which chooses the genre from the homepage. 
 
     def choose_genre(self):
-        choose_fighting_genre = self.driver.find_element(By.XPATH, '//*[@id="main"]/div[4]/div/div[2]/div[2]/div[1]/div/div/div/ul/li[3]/a').get_attribute("href")
-        fighting_genre_url = print(choose_fighting_genre)
-        self.driver.get(choose_fighting_genre)
-        return fighting_genre_url
-        
-    #TODO: make a method which collects the links from each of the items on the page. 
 
-    
-    def collect_page_links(self):
-        #TODO: Try find_elements(By.CSS_SELECTOR)
-        page_container = self.driver.find_elements(By.XPATH, '//a[@class="title"]')
-        page_links_list = []
+        '''
+        Currently works for games, tv and music 
 
-        for url in page_container:
-            link_to_page = url.get_attribute('href')
-            page_links_list.append(link_to_page)
-            self.page_counter += 1
+        '''
+        genre_container = self.driver.find_elements(By.XPATH, 
+            '//ul[@class="genre_nav"]//a')
        
-        print(page_links_list)
-        print(len(page_links_list))
-        print(f'Pages visited: {self.page_counter}')
-        return page_links_list
-    
-    
-    
-    # TODO: Make the scraper click the next page and take the links from there. 
-    # Try these links out: 
-    # https://stackoverflow.com/questions/56019749/python-web-scraping-how-to-loop-all-pages-next-page
-    # https://stackoverflow.com/questions/55005839/python-web-scraping-using-selenium-clicking-on-next-page
-    # https://www.google.com/search?q=python+selenium+scrape+next+pages&rlz=1C1VDKB_en-GBGB964GB964&oq=python+selenium+scrape+next+pages+&aqs=chrome..69i57j33i22i29i30l3.5678j1j7&sourceid=chrome&ie=UTF-8
+
+        list_of_genre_links = []
+        list_of_genres = []
+        for item in genre_container:
+            list_of_genre_links.append(item.get_attribute('href'))
+            list_of_genres.append(item.text)
+
+        print(list_of_genre_links)
+        print(list_of_genres)
+        return list_of_genre_links
+
+   
 
     def click_next_page(self, page):
 
-        #TODO: find a way to generalise this code for all pages on the website. Maybe make another method to check the last page? 
+        #TODO: find a way to generalise this code for all pages on the website. 
+        # Maybe make another method to check the last page? 
     
-        next_page_element = self.driver.find_element(By.XPATH, f'//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[{page}]/*')
+        next_page_element = self.driver.find_element(
+            By.XPATH, 
+            f'//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[{page}]/*'
+        )
+        # //*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[7]/a
         next_page_url = next_page_element.get_attribute('href')
-        self.driver.get(next_page_url)
-        print(next_page_url)
+       
+        self.driver.get(str(next_page_url))
+        print(page)
+        print(type(page))
+        # print(next_page_url)
         print('navigating to next page')
         
         return next_page_url
-
-    def collect_number_of_pages(self):
-        #TODO: Generalise the CSS_Selector. It's too long and specific to only the fighting games page?  
-        last_page_number_element = (self.driver.find_element(By.CSS_SELECTOR, 
-        '#main_content > div.browse.new_releases > div.content_after_header > \
-        div > div.next_to_side_col > div > div.marg_top1 > div > div > div.pages > ul > \
-        li.page.last_page > a' ).text)
-        print(last_page_number_element)
-        print(f"Processing page {last_page_number_element}..")
-        last_page_number = int(last_page_number_element)
-
-            # try:
-            #     next_page_link = self.driver.find_element(By.XPATH, f'.//li[span = "{current_page_number + 1}"]')
-            #     next_page_link.click()
-            # except NoSuchElementException:
-            #     print(f"Exiting. Last page: {current_page_number}.")
-            #     break
-        return last_page_number
            
     
     def get_information_from_page(self):   
@@ -168,28 +157,40 @@ class MetaCriticScraper:
          
             
             try:
+                # if the key in the dictionary == description. Expand the description text on the page. 
                 if key == 'Description':
+                    # Look inside the container 
                     web_element = self.driver.find_element(By.XPATH, '//div[@class="summary_wrap"]') 
 
                     try:
-                        
+                        # try to find the collapse button inside the container using relative xpath './/'
                         collapse_button = web_element.find_element(By.XPATH, './/span[@class="toggle_expand_collapse toggle_expand"]')
                         if collapse_button:
                             collapse_button.click()
                             expanded_description = web_element.find_element(By.XPATH, './/span[@class="blurb blurb_expanded"]')
                             self.information_dict[key] = expanded_description.text
-
+                    # If there is no expand button inside the description field, set the key of information dict to the 
+                    # text of the xpath found. 
                     except:
-                           summary = web_element.find_element(By.XPATH, xpath)
-                           self.information_dict[key] = summary.text
+                        summary = web_element.find_element(By.XPATH, xpath)
+                        self.information_dict[key] = summary.text
 
                    
                 else:
-                    web_element = self.driver.find_element(By.XPATH, xpath) 
-                    self.information_dict[key] = web_element.text 
-                
-            except:
-                
+                    # Further logic for special cases: UUID and the Link_to_Page.
+                    if key == 'UUID':
+                        self.information_dict[key] = xpath
+
+                    elif key == 'Link_to_Page':
+                        web_element = self.driver.find_element(By.XPATH, xpath).get_attribute('href') 
+                        self.information_dict[key] = web_element
+
+                        
+                    else:
+                        web_element = self.driver.find_element(By.XPATH, xpath) 
+                        self.information_dict[key] = web_element.text 
+
+            except:     
                 self.information_dict[key] = 'Null'
 
         
@@ -204,51 +205,102 @@ class MetaCriticScraper:
                 # Code that runs when 'conditionA' and
                 # 'conditionB' are both True
 
-    def save_json(self, all_products_dictionary, sub_category_name):
-        #TODO: Run a unittest on this method to check that a json file is created
-        file_to_convert = all_products_dictionary
-        file_name = f'{sub_category_name}-details.json'
+    
+    def process_page_links(self):
+        #TODO: Make this method return a list of links for all pages to visit.
+        #TODO: Look at the logic behind click_next_page method.
+        self.accept_cookies('//button[@id="onetrust-accept-btn-handler"]') 
+        list_of_all_pages_to_visit = []
+        
+        for url in self.choose_genre():
+            list_of_all_pages_to_visit.append(url)
+            self.driver.get(url) 
+            try:
+                page_value = self.collect_number_of_pages(
+                    '#main_content > div.browse.new_releases > div.content_after_header > \
+                    div > div.next_to_side_col > div > div.marg_top1 > div > div > div.pages > ul > \
+                    li.page.last_page > a'
+                )
+                range_final = page_value + 1
+            except:
+                #self.driver.implicitly_wait(5)
+                self.extract_the_page_links('//a[@class="title"]', 'href')
+                range_final = 0
+            for i in range(1, range_final):
+                #self.driver.implicitly_wait(5)
+                list_of_all_pages_to_visit.extend(self.extract_the_page_links('//a[@class="title"]', 'href'))
 
-        if not os.path.exists('json-files'):
-            os.makedirs('json-files')
-        with open(f'json-files/{file_name}', mode='a+', encoding='utf-8-sig') as f:
-            json.dump(file_to_convert, f, indent=4, ensure_ascii=False) 
-            f.write('\n')
-        return True     
+                try:
+                    (WebDriverWait(self.driver, 1)
+                    .until(EC.element_to_be_clickable(
+                        (By.XPATH, '//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[1]/span[2]/a/span')
+                        )
+                    )).click()
+                    print('navigating to next page')
+                except TimeoutException:
+                    if range_final:
+                        break
+                  # self.infinite_scroll_down_page()
+                # try:
+                #     self.driver.get(f'https://www.metacritic.com/browse/games/genre/date/action/all?page={i}')
+                #     time.sleep(1)
+                # except:
+                #     self.infinite_scroll_down_page()
+                #     retry = (WebDriverWait(self.driver, 10)
+                #     .until(EC.presence_of_element_located(
+                #             (By.XPATH, '//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[1]/span[2]/a/span')
+                #             )
+                #             )
+                #     )
+                #     retry.click()
+
 
 
     def sample_scraper(self):
         # Goes to Games > Games Home > 'Search by Genre': Fighting > Scrapes 6 pages of content 
-        self.choose_game_category()
-        self.choose_genre()
-
-        root_page = "https://www.metacritic.com/game"
-
+        self.accept_cookies('//button[@id="onetrust-accept-btn-handler"]')
+        genre_list = self.choose_genre()
+        self.driver.get(genre_list[2])
+        
+        #TODO populate the all_pages_list with hrefs from ALL pages in the 'Games' section of the website. 
+        
         all_pages_list = []
+        
+        # filter_list = self.apply_filter_list(
+        # '//ul[@class="dropdown dropdown_open"]//li/a',
+        # '//div[@class="mcmenu dropdown style2 genre"]'
+    # )
 
-        #TODO: steps for future 
-        #range needs to be set dynamically instead of hardcoded
-        page_value = self.collect_number_of_pages()
+        # Collect the number of pages on the page to use in range function
+
+        page_value = self.collect_number_of_pages(
+            '#main_content > div.browse.new_releases > div.content_after_header > \
+            div > div.next_to_side_col > div > div.marg_top1 > div > div > div.pages > ul > \
+            li.page.last_page > a'
+        )
+        # Set the final range to +1 more to satisfy the range function
+
         range_final = page_value + 1
         # for page in range(2,rangefinal):
         for page in range(2,range_final):
-            all_pages_list.extend(self.collect_page_links())
+            all_pages_list.extend(self.extract_the_page_links('//a[@class="title"]', 'href'))
             time.sleep(1)
             self.click_next_page(page)
 
-        all_pages_list.extend(self.collect_page_links())
+        all_pages_list.extend(self.extract_the_page_links('//a[@class="title"]', 'href'))
 
         for url in all_pages_list:
-           time.sleep(1)
-           #TODO: use a try and except statement to catch the timeout exception. 
-           try:
-               self.driver.get(url)
-               time.sleep(2)
-           except TimeoutException:
-               time.sleep(4)
-               self.driver.get(url) 
-               
-           self.get_information_from_page()
+            time.sleep(1)
+            #TODO: use a try and except statement to catch the timeout exception. 
+            try:
+                self.driver.get(url)
+                time.sleep(2)
+            except TimeoutException:
+                time.sleep(4)
+                self.driver.refresh()
+                self.driver.get(url) 
+                
+            self.get_information_from_page()
         
         
 
@@ -256,22 +308,23 @@ class MetaCriticScraper:
         
 # new syntax for driver.find_elements(By.XPATH, "xpath string")
 if __name__ == '__main__':     
-    new_scraper = MetaCriticScraper("https://www.metacritic.com/")
-    # new_scraper.choose_game_category()
+    new_scraper = MetaCriticScraper("https://www.metacritic.com/music")
     # new_scraper.choose_genre()
     # new_scraper.collect_page_links()
     # new_scraper.get_information_from_page()
+    new_scraper.process_page_links()
     # new_scraper.click_next_page()
     # new_scraper.collect_number_of_pages()
     # new_scraper.click_next_page_3()
     # new_scraper.last_page()
     # new_scraper.process_page_links()
-
+    # new_scraper.choose_category('music')
     # Timing how long it takes to scrape from 100 pages 
-    t1_start = perf_counter()
-    new_scraper.sample_scraper()
-    t1_stop = perf_counter()
-    print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
+    # t1_start = perf_counter()
+  
+    # new_scraper.sample_scraper()
+    # t1_stop = perf_counter()
+    # print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
 
 # Current stats(1/01/2022): 100 pages in 226 seconds (2 minutes, 4 seconds.)
 # Current stats(27/01/2022): 500 pages in 2828 seconds (47 minutes, 8 seconds)
@@ -279,4 +332,5 @@ if __name__ == '__main__':
 # Current stats (14/02/2022): 500 pages in 3145 seconds (52 minutes, 24 seconds)
 # Current stats (15/02/2022): 524 pages in 2481 seconds (41 minutes, 21 seconds)
 # Current stats (15/02/2022, 22:46pm): 524 pages in 2697 seconds (44 minutes, 57 seconds)
+# Current stats (22/03/2022): 524 pages in 2677 seconds (44 minutes, 37 seconds)
 
