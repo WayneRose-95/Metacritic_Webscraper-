@@ -301,7 +301,7 @@ class MetaCriticScraper(Scraper):
         
 # new syntax for driver.find_elements(By.XPATH, "xpath string")
 if __name__ == '__main__':     
-    new_scraper = MetaCriticScraper("https://www.metacritic.com/music")
+    new_scraper = MetaCriticScraper("https://www.metacritic.com/game")
     # new_scraper.choose_genre()
     # new_scraper.collect_page_links()
     # new_scraper.get_information_from_page()

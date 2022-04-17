@@ -10,6 +10,7 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import NoSuchFrameException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from urllib3.exceptions import SSLError
 from typing import Optional
 import time
@@ -43,11 +44,14 @@ class Scraper:
     def __init__(self):
 
         chrome_options = ChromeOptions()
-        #chrome_options.add_experimental_option("debuggerAddress", "127.0.0.1:9014")
+        # chrome_options.add_experimental_option("debuggerAddress", "127.0.0.1:9014")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--no-sandbox')
-        self.driver =  Chrome(ChromeDriverManager().install(), options=chrome_options)
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        caps = DesiredCapabilities().CHROME
+        caps["pageLoadStrategy"] = "normal"
+        self.driver =  Chrome(ChromeDriverManager().install(), options=chrome_options, desired_capabilities=caps)
         self.id = next(self.increasing_id)
          
     
@@ -71,7 +75,7 @@ class Scraper:
                 accept_cookies_button.click()
             else:
                 accept_cookies_button = (
-                WebDriverWait(self.driver, 0.5)
+                WebDriverWait(self.driver, 3)
                 .until(EC.presence_of_element_located((
                     By.XPATH, cookies_button_xpath))
                 )
