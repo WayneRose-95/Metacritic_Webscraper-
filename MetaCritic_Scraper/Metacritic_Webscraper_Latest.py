@@ -227,32 +227,25 @@ class MetaCriticScraper(Scraper):
                 self.extract_the_page_links('//a[@class="title"]', 'href')
                 range_final = 0
             for i in range(1, range_final):
+                with open("list_of_links.txt", 'a+') as file:
                 #self.driver.implicitly_wait(5)
-                list_of_all_pages_to_visit.extend(self.extract_the_page_links('//a[@class="title"]', 'href'))
-
-                try:
-                    (WebDriverWait(self.driver, 1)
-                    .until(EC.element_to_be_clickable(
-                        (By.XPATH, '//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[1]/span[2]/a/span')
-                        )
-                    )).click()
-                    print('navigating to next page')
-                except TimeoutException:
-                    if range_final:
-                        break
-                  # self.infinite_scroll_down_page()
-                # try:
-                #     self.driver.get(f'https://www.metacritic.com/browse/games/genre/date/action/all?page={i}')
-                #     time.sleep(1)
-                # except:
-                #     self.infinite_scroll_down_page()
-                #     retry = (WebDriverWait(self.driver, 10)
-                #     .until(EC.presence_of_element_located(
-                #             (By.XPATH, '//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[1]/span[2]/a/span')
-                #             )
-                #             )
-                #     )
-                #     retry.click()
+                    list_of_all_pages_to_visit.extend(self.extract_the_page_links('//a[@class="title"]', 'href'))
+                    while len(list_of_all_pages_to_visit) > 0: 
+                        url = list_of_all_pages_to_visit.pop(0)
+                        file.write(str(url))
+                        file.write('\n')
+                    try:
+                        (WebDriverWait(self.driver, 1)
+                        .until(EC.element_to_be_clickable(
+                            (By.XPATH, '//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[1]/span[2]/a/span')
+                            )
+                        )).click()
+                        print('navigating to next page')
+                    except TimeoutException:
+                        if range_final:
+                            break
+                    #TODO: During this loop, the outputs of the links are stored inside a text file to be called when running the sample_scraper method 
+                
 
 
 
@@ -308,7 +301,7 @@ class MetaCriticScraper(Scraper):
         
 # new syntax for driver.find_elements(By.XPATH, "xpath string")
 if __name__ == '__main__':     
-    new_scraper = MetaCriticScraper("https://www.metacritic.com/music")
+    new_scraper = MetaCriticScraper("https://www.metacritic.com/game")
     # new_scraper.choose_genre()
     # new_scraper.collect_page_links()
     # new_scraper.get_information_from_page()
