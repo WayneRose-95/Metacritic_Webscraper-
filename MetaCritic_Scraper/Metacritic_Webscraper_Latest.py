@@ -16,9 +16,11 @@ import urllib.request
 from Scraper import Scraper
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from alive-progress import alive_bar
 import uuid
 import sys
-sys.path.append("/media/blair/Fast Partition/My Projects/student_projects/Metacritic_Webscraper-/MetaCritic_Scraper")
+import random
+# sys.path.append("/media/blair/Fast Partition/My Projects/student_projects/Metacritic_Webscraper-/MetaCritic_Scraper")
 
 
 class MetaCriticScraper(Scraper): 
@@ -295,8 +297,33 @@ class MetaCriticScraper(Scraper):
                 
             self.get_information_from_page()
         
-        
+    def scrape_games(self, file_name):
+        with open(f"{file_name}.txt") as file:
+            number_of_lines = len(file.readlines())
 
+            content_list= []
+            image_list = []
+           
+            with alive_bar(number_of_lines, dual_line=True, title='Progress') as progress_bar: 
+                for line in file:
+                    
+                    self.driver.get(str(line))
+                    content_list.append(self.get_information_from_page())
+
+                    image_list.append(self.save_image_links(
+                        'image_name',
+                        '//*[@id="main"]/div/div[1]/div[1]/div[3]/div/div/div[1]/div/img'
+                    ))
+                    progress_bar()
+                    #TODO: The scraper breaks on random pages when it tries to get images. Why? 
+
+                self.save_json(content_list, 'raw-data')
+                self.save_json(image_list, 'image_data')
+            # logger.info('Scrape Complete! Exiting..')
+            self.driver.quit()
+        return content_list
+
+      
 
         
 # new syntax for driver.find_elements(By.XPATH, "xpath string")

@@ -261,62 +261,61 @@ class Scraper:
     # Refactor this so that the image saves within a directory 
     # Then refactor it to save multiple images inside a directory. 
 
-    def save_image_links(self, image_name_xpath, image_src_xpath):
-        '''
-        Method to save image srcs inside a dictionary with unique IDs. 
+    def save_image_links(
+        self, 
+        sub_category_name: str,
+        image_container_xpath : str
+    ):
+        """
+        Method to download every product image (jpg format).
+    
+        Parameters: 
+            sub_category_name (str): The name of the sub-category 
 
-        Returns:
-        self.image_dict = A Dictionary which contains data on the image. 
-        '''
+            image_container_xpath (str): The name of the container for the xpaths 
+
+
+        """
+
+        #TODO: The scraper breaks on random pages when it tries to get images. Why? 
+
+        image_srcs = self.extract_the_page_links(image_container_xpath, 'src')
+        sub_category_name = self.extract_the_page_links(image_container_xpath, 'alt')
+        
+        while len(sub_category_name) > 0:
+            image_string = sub_category_name.pop(0)
+            strip_irregular_characters = image_string.replace(":", "")
+            image_name = strip_irregular_characters[:200]
+            # logger.info(f'Image name stripped from list')
+
+        while len(image_srcs) > 0:
+            image_link = image_srcs.pop(0)
+            # logger.info(f'Image link stripped from list')
+            
+                
         self.image_dict = {
-            'ID': [],
-            'Friendly_ID': [],
-            'Image_Name': [],
-            'Image_Link': []
+            
         }
 
-        # Find all of the srcs and alt tags from the page 
-        image_names = self.extract_the_page_links(image_name_xpath, 'alt')
-        image_links = self.extract_the_page_links(image_src_xpath, 'src')
-
-        #TODO: How to split elements from a list? 
-        
-        # Append the split src urls to a new list to populate Friendly_ID field 
-            
-
         self.image_xpath_dict = {
-            'ID': "",
-            'Friendly_ID': f"{self.increasing_id}",
-            'Image_Name': f'{image_names}',
-            'Image_Link' :f'{image_links}'
+            'UUID': "",
+            'Image_Name': f'{image_name}',
+            'Image_Link' :[f'{image_link}']
         }
        
     
         for key,value in self.image_xpath_dict.items():
             try:
-                if key == "ID":
+                if key == "UUID":
                     self.image_dict[key] = str(uuid.uuid4())
-                else:
-                       
+                elif key == 'Image_Link':
+                    self.image_dict[key] = value
+                else:                      
                     self.image_dict[key] = value
             except:
                 self.image_dict[key] = 'Null'
-        
-
-        if not os.path.exists('images'):
-            os.makedirs('images')
-            try:
-                for i,link in enumerate(image_names):
-                    with open(f'images/{link}_{i}.jpg', "wb") as file:
-                        img = self.driver.find_element(By.XPATH, image_src_xpath)
-                        time.sleep(3)
-                        file.write(img.screenshot_as_png)
-                        time.sleep(3)
-            except:
-                print('There was an error')
        
-       
-        print(self.image_dict)
+        # logger.debug(self.image_dict)
         return self.image_dict
 
     def save_json(self, all_products_dictionary, sub_category_name):
