@@ -1,13 +1,15 @@
 import csv
 import time 
 from time import perf_counter
-import os 
+import os
+# from numpy import number 
 import selenium
 import json 
 # from selenium import webdriver 
 from selenium.webdriver import Chrome
 from selenium.webdriver import ChromeOptions
 from selenium.webdriver.common.by import By
+from tqdm import tqdm
 from urllib3 import Timeout
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import TimeoutException
@@ -16,12 +18,35 @@ import urllib.request
 from Scraper import Scraper
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from alive-progress import alive_bar
+from alive_progress import alive_bar
+from tqdm import tqdm
 import uuid
 import sys
 import random
+import logging 
+
 # sys.path.append("/media/blair/Fast Partition/My Projects/student_projects/Metacritic_Webscraper-/MetaCritic_Scraper")
 
+log_filename = "logs/metacritic_scraper.log"
+if not os.path.exists(log_filename):
+    os.makedirs(os.path.dirname(log_filename), exist_ok=True)
+
+logger = logging.getLogger(__name__)
+
+# Set the default level as DEBUG 
+logger.setLevel(logging.DEBUG)
+
+# Format the logs by time, filename, function_name, level_name and the message
+format = logging.Formatter(
+    '%(asctime)s:%(filename)s:%(funcName)s:%(levelname)s:%(message)s'
+)
+file_handler = logging.FileHandler(log_filename)
+
+# Set the formatter to the variable format
+
+file_handler.setFormatter(format)
+
+logger.addHandler(file_handler)
 
 class MetaCriticScraper(Scraper): 
 
@@ -143,10 +168,10 @@ class MetaCriticScraper(Scraper):
         next_page_url = next_page_element.get_attribute('href')
        
         self.driver.get(str(next_page_url))
-        print(page)
-        print(type(page))
+        logger.debug(page)
+        logger.debug(type(page))
         # print(next_page_url)
-        print('navigating to next page')
+        logger.info('navigating to next page')
         
         return next_page_url
            
@@ -161,27 +186,26 @@ class MetaCriticScraper(Scraper):
             try:
                 # if the key in the dictionary == description. Expand the description text on the page. 
                 if key == 'Description':
-                    # Look inside the container 
-                    web_element = self.driver.find_element(By.XPATH, '//div[@class="summary_wrap"]') 
-
+                    # Look inside the container
+                    web_element = WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, '//div[@class="summary_wrap"]')))
                     try:
                         # try to find the collapse button inside the container using relative xpath './/'
-                        collapse_button = web_element.find_element(By.XPATH, './/span[@class="toggle_expand_collapse toggle_expand"]')
+                        collapse_button = WebDriverWait(self.driver, 0.5).until(EC.presence_of_element_located((By.XPATH, './/span[@class="toggle_expand_collapse toggle_expand"]')))
                         if collapse_button:
                             collapse_button.click()
-                            expanded_description = web_element.find_element(By.XPATH, './/span[@class="blurb blurb_expanded"]')
+                            expanded_description = WebDriverWait(self.driver, 1).until(EC.presence_of_element_located((By.XPATH, './/span[@class="blurb blurb_expanded"]')))
                             self.information_dict[key] = expanded_description.text
                     # If there is no expand button inside the description field, set the key of information dict to the 
                     # text of the xpath found. 
                     except:
-                        summary = web_element.find_element(By.XPATH, xpath)
+                        summary = WebDriverWait(self.driver, 1).until(EC.presence_of_element_located((By.XPATH, xpath)))
                         self.information_dict[key] = summary.text
 
                    
                 else:
                     # Further logic for special cases: UUID and the Link_to_Page.
                     if key == 'UUID':
-                        self.information_dict[key] = xpath
+                        self.information_dict[key] = str(uuid.uuid4())
 
                     elif key == 'Link_to_Page':
                         web_element = self.driver.find_element(By.XPATH, xpath).get_attribute('href') 
@@ -189,14 +213,16 @@ class MetaCriticScraper(Scraper):
 
                         
                     else:
-                        web_element = self.driver.find_element(By.XPATH, xpath) 
+                        web_element = WebDriverWait(self.driver, 1).until(EC.presence_of_element_located((By.XPATH, xpath)))
                         self.information_dict[key] = web_element.text 
 
-            except:     
+            except:  
+                logger.warning('Null value recorded, please check the page or xpath')   
                 self.information_dict[key] = 'Null'
 
         
-
+        logger.info('Dictionary Created')
+        logger.info(self.information_dict)
         print(self.information_dict)
         return self.information_dict
 
@@ -242,7 +268,7 @@ class MetaCriticScraper(Scraper):
                             (By.XPATH, '//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[1]/span[2]/a/span')
                             )
                         )).click()
-                        print('navigating to next page')
+                        logger.info('navigating to next page')
                     except TimeoutException:
                         if range_final:
                             break
@@ -267,6 +293,8 @@ class MetaCriticScraper(Scraper):
     # )
 
         # Collect the number of pages on the page to use in range function
+        content_list = []
+       
 
         page_value = self.collect_number_of_pages(
             '#main_content > div.browse.new_releases > div.content_after_header > \
@@ -285,43 +313,87 @@ class MetaCriticScraper(Scraper):
         all_pages_list.extend(self.extract_the_page_links('//a[@class="title"]', 'href'))
 
         for url in all_pages_list:
-            time.sleep(1)
+            
             #TODO: use a try and except statement to catch the timeout exception. 
             try:
                 self.driver.get(url)
-                time.sleep(2)
             except TimeoutException:
                 time.sleep(4)
                 self.driver.refresh()
                 self.driver.get(url) 
                 
-            self.get_information_from_page()
-        
-    def scrape_games(self, file_name):
-        with open(f"{file_name}.txt") as file:
-            number_of_lines = len(file.readlines())
+            content_list.append(self.get_information_from_page())
 
+        self.save_json(content_list, 'raw-data')
+        logger.info('Scrape complete! Exiting...')
+        self.driver.quit()
+
+    def scrape_games(self):
+        # Find the Accept Cookies button and then click on it 
+        '''
+        The problem now is that whilst scraping, the webdriver is not given enough time to 
+        collect each piece of information from each of the pages. 
+
+        This is because the accept_cookies function is too slow to accept the cookies on the website
+
+        Then... on the get_information_from_page method, the webdriver is not being given 
+        enough time to go through the lines in the method before printing out 
+        the completed dictionary with all of the data inside. 
+
+        To fix this, WebDriverWait must be used to give the scraper time to find all items 
+        promptly before switching pages. 
+
+        '''
+        self.accept_cookies('//button[@id="onetrust-accept-btn-handler"]')
+        
+        # Open the text file with all of the links to go to 
+        with open(f"list_of_links.txt", 'r') as file:
+            # Get the number of items inside the file 
+            # Read the lines inside the file and 
+            
             content_list= []
             image_list = []
-           
-            with alive_bar(number_of_lines, dual_line=True, title='Progress') as progress_bar: 
-                for line in file:
+            
+            time.sleep(5)
+            # with tqdm(total=number_of_lines) as progress_bar:
+            logger.info('Start Scrape') 
+            for line in file:
+                # print(line)
+                logger.info(f'Navigating to {line}')
+                self.driver.get(line)
+                logger.info('Landed on page')
+                time.sleep(random.randint(1,2))
+                logger.info('Collecting information from page')
+                content_list.append(self.get_information_from_page())
+                logger.info('Data Collected')
+                
                     
-                    self.driver.get(str(line))
-                    content_list.append(self.get_information_from_page())
 
-                    image_list.append(self.save_image_links(
-                        'image_name',
-                        '//*[@id="main"]/div/div[1]/div[1]/div[3]/div/div/div[1]/div/img'
-                    ))
-                    progress_bar()
-                    #TODO: The scraper breaks on random pages when it tries to get images. Why? 
-
-                self.save_json(content_list, 'raw-data')
-                self.save_json(image_list, 'image_data')
-            # logger.info('Scrape Complete! Exiting..')
+            self.save_json(content_list, 'raw-data')
+                
+            logger.info('Scrape Complete! Exiting..')
             self.driver.quit()
-        return content_list
+
+        return content_list, image_list
+
+    def get_links(self):
+        content_list = []
+        with open(f"list_of_links.txt", 'r') as file:
+            for line in (file): 
+                logger.info(f'Navigating to {line}')
+                self.driver.get(line)
+                self.driver.implicitly_wait(4)
+                content_list.append(self.get_information_from_page())
+                logger.info('Information collected')
+                
+                    
+                
+                    
+
+        self.save_json(content_list, 'raw-data')
+        logger.info('Scrape complete! Exiting....')
+
+        
 
       
 
@@ -332,19 +404,19 @@ if __name__ == '__main__':
     # new_scraper.choose_genre()
     # new_scraper.collect_page_links()
     # new_scraper.get_information_from_page()
-    new_scraper.process_page_links()
+    # new_scraper.process_page_links()
     # new_scraper.click_next_page()
     # new_scraper.collect_number_of_pages()
     # new_scraper.click_next_page_3()
     # new_scraper.last_page()
-    # new_scraper.process_page_links()
     # new_scraper.choose_category('music')
     # Timing how long it takes to scrape from 100 pages 
     # t1_start = perf_counter()
-  
+    # new_scraper.get_links()
+    new_scraper.scrape_games()
     # new_scraper.sample_scraper()
     # t1_stop = perf_counter()
-    # print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
+  
 
 # Current stats(1/01/2022): 100 pages in 226 seconds (2 minutes, 4 seconds.)
 # Current stats(27/01/2022): 500 pages in 2828 seconds (47 minutes, 8 seconds)

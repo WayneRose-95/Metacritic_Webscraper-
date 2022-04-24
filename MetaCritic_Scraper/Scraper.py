@@ -12,6 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from urllib3.exceptions import SSLError
+from user_agent import generate_user_agent
 from typing import Optional
 import time
 import urllib.request
@@ -25,9 +26,32 @@ from json import JSONEncoder
 import itertools 
 import requests
 import certifi
+import logging 
 
 
 #%%
+
+log_filename = "logs/scraper.log"
+if not os.path.exists(log_filename):
+    os.makedirs(os.path.dirname(log_filename), exist_ok=True)
+
+logger = logging.getLogger(__name__)
+
+# Set the default level as DEBUG 
+logger.setLevel(logging.DEBUG)
+
+# Format the logs by time, filename, function_name, level_name and the message
+format = logging.Formatter(
+    '%(asctime)s:%(filename)s:%(funcName)s:%(levelname)s:%(message)s'
+)
+file_handler = logging.FileHandler(log_filename)
+
+# Set the formatter to the variable format
+
+file_handler.setFormatter(format)
+
+logger.addHandler(file_handler)
+
 class Scraper: 
 
     '''
@@ -49,6 +73,7 @@ class Scraper:
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
+        # chrome_options.add_argument(generate_user_agent())
         caps = DesiredCapabilities().CHROME
         caps["pageLoadStrategy"] = "normal"
         self.driver =  Chrome(ChromeDriverManager().install(), options=chrome_options, desired_capabilities=caps)
@@ -57,6 +82,7 @@ class Scraper:
     
     def land_first_page(self, page_url : str):
         home_page = self.driver.get(page_url)
+        logger.debug('Landed first page')
         return home_page
 
     def accept_cookies(self, cookies_button_xpath : str, iframe: Optional[str]=None): 
@@ -81,13 +107,13 @@ class Scraper:
                 )
             )
             accept_cookies_button.click()
-            print('The accept cookies button has been clicked')
+            logger.debug('The accept cookies button has been clicked')
 
         except NoSuchFrameException: # If it is not within a frame then find the xpath and proceed click it. 
-            print('No iframe found')
+            logger.warning('No iframe found')
             accept_cookies = self.driver.find_element(By.XPATH, cookies_button_xpath)
             accept_cookies.click()
-            print('The accept cookies button has been clicked')
+            logger.debug('The accept cookies button has been clicked')
         return True  
     
     def manipulate_search_bar(self, search_bar_xpath : str, text : str):
@@ -105,14 +131,15 @@ class Scraper:
             search_bar_element.click()
         except:
             # If it is not present, close the window. 
-            print('no search bar found')
+            logger.exception('no search bar found')
             self.driver.quit()
 
         if search_bar_element:
             search_bar_element.send_keys(text)
             search_bar_element.send_keys(Keys.ENTER)
         else:
-            raise Exception('Text failed')
+            logger.exception('Text failed')
+            raise Exception
         
         return search_bar_element, text
 
@@ -146,9 +173,8 @@ class Scraper:
         attribute : str = 'href' or 'src' or 'alt'
     ):
         
-        temp = True 
-        while temp is True:
-            try:
+    
+        try:
         # find the container with the links
                 page_container = (
                     WebDriverWait(self.driver, 0.5)
@@ -157,10 +183,10 @@ class Scraper:
                         )
                     )
                 )
-                temp = False 
-            except Exception:
-                print('entered exception')
-                continue
+                
+        except Exception:
+            logger.exception('entered exception')
+              
   
         page_links_list = []
         page_counter = 0 
@@ -194,7 +220,8 @@ class Scraper:
             container = self.driver.find_element(By.XPATH, container_xpath)
             print(container)
         except:
-            raise Exception('There was no element')
+            logger.error('There was no element. Please check your xpath')
+            raise Exception
 
     def apply_filter_list(self, filter_container_xpath : str , filter_button=None):
 
@@ -286,11 +313,11 @@ class Scraper:
             image_string = sub_category_name.pop(0)
             strip_irregular_characters = image_string.replace(":", "")
             image_name = strip_irregular_characters[:200]
-            # logger.info(f'Image name stripped from list')
+            logger.info(f'Image name stripped from list')
 
         while len(image_srcs) > 0:
             image_link = image_srcs.pop(0)
-            # logger.info(f'Image link stripped from list')
+            logger.info(f'Image link stripped from list')
             
                 
         self.image_dict = {
@@ -315,7 +342,7 @@ class Scraper:
             except:
                 self.image_dict[key] = 'Null'
        
-        # logger.debug(self.image_dict)
+        logger.debug(self.image_dict)
         return self.image_dict
 
     def save_json(self, all_products_dictionary, sub_category_name):
@@ -327,6 +354,7 @@ class Scraper:
         with open(f'json-files/{file_name}', mode='a+', encoding='utf-8-sig') as f:
             json.dump(file_to_convert, f, indent=4, ensure_ascii=False) 
             f.write('\n')
+        logger.debug('.json file created')
         return True
      
                  
