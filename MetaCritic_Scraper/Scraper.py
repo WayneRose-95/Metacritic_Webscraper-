@@ -77,7 +77,6 @@ class Scraper:
         caps = DesiredCapabilities().CHROME
         caps["pageLoadStrategy"] = "normal"
         self.driver =  Chrome(ChromeDriverManager().install(), options=chrome_options, desired_capabilities=caps)
-        self.id = next(self.increasing_id)
          
     
     def land_first_page(self, page_url : str):
@@ -206,11 +205,11 @@ class Scraper:
     def collect_number_of_pages(self, last_page_number : str ):
         try:
             last_page_number_element = (self.driver.find_element(By.CSS_SELECTOR, last_page_number).text)
-            print(last_page_number_element)
-            print(f"Max Page = {last_page_number_element}..")
+            logger.debug(last_page_number_element)
+            logger.info(f"Max Page = {last_page_number_element}..")
             last_page_number = int(last_page_number_element)
         except NoSuchElementException:
-            print('Element not found. Exiting...')
+            logger.exception('Element not found. Exiting...')
 
         return last_page_number
                
@@ -220,7 +219,7 @@ class Scraper:
             container = self.driver.find_element(By.XPATH, container_xpath)
             print(container)
         except:
-            logger.error('There was no element. Please check your xpath')
+            logger.exception('There was no element. Please check your xpath')
             raise Exception
 
     def apply_filter_list(self, filter_container_xpath : str , filter_button=None):
