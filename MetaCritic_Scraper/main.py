@@ -27,6 +27,6 @@ logger.addHandler(file_handler)
 
 new_scraper = MetaCriticScraper("https://www.metacritic.com")
 start_time = perf_counter()
-new_scraper.sample_scraper('list_of_links')
+new_scraper.sample_scraper('list_of_fighting_links')
 stop_time = perf_counter()
 logger.info(f'Total elapsed time {stop_time - start_time} seconds')

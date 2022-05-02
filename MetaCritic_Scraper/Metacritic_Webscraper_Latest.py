@@ -135,7 +135,7 @@ class MetaCriticScraper(Scraper):
     
     def get_information_from_page(self):   
         
-    
+        page_information_dict = {}
         #TODO: This could be a staticmethod? 
         for key,xpath in self.xpaths_dict.items():
          
@@ -152,36 +152,36 @@ class MetaCriticScraper(Scraper):
                         if collapse_button:
                             collapse_button.click()
                             expanded_description = web_element.find_element(By.XPATH, './/span[@class="blurb blurb_expanded"]')
-                            self.information_dict[key] = expanded_description.text
+                            page_information_dict[key] = expanded_description.text
                     # If there is no expand button inside the description field, set the key of information dict to the 
                     # text of the xpath found. 
                     except:
                         summary = web_element.find_element(By.XPATH, xpath)
-                        self.information_dict[key] = summary.text
+                        page_information_dict[key] = summary.text
 
                    
                 else:
                     # Further logic for special cases: UUID and the Link_to_Page.
                     if key == 'UUID':
-                        self.information_dict[key] = str(uuid.uuid4())
+                        page_information_dict[key] = str(uuid.uuid4())
 
                     elif key == 'Link_to_Page':
                         web_element = self.driver.find_element(By.XPATH, xpath).get_attribute('href') 
-                        self.information_dict[key] = web_element
+                        page_information_dict[key] = web_element
 
                         
                     else:
                         web_element = self.driver.find_element(By.XPATH, xpath) 
-                        self.information_dict[key] = web_element.text 
+                        page_information_dict[key] = web_element.text 
 
             except:     
-                self.information_dict[key] = 'Null'
+                page_information_dict[key] = 'Null'
                 logger.warning('Null value recorded. Please check the xpath or webpage')
         
         logger.info('Dictionary Created')
-        logger.info(self.information_dict)
-        print(self.information_dict)
-        return self.information_dict
+        logger.info(page_information_dict)
+        print(page_information_dict)
+        return page_information_dict
 
 
     
@@ -228,24 +228,27 @@ class MetaCriticScraper(Scraper):
 
         self.process_page_links(file_name)
         
-        content_list = []
+        
 
         with open (f'{file_name}.txt') as file:
+            content_list = []
             for line in file:
                 try:
                     self.driver.implicitly_wait(3)
                     self.driver.get(str(line))
+                    
+                    content_list.append(self.get_information_from_page())
+                   
                 except TimeoutException:
-                    logger.warning('TimeoutException encountered on this page. Please check ;logs.')
+                    logger.warning('Timeoutexception on this page. Retrying.')
                     self.driver.implicitly_wait(3)
                     self.driver.refresh()
-                    self.driver.get(str(line))
-
-                content_list.append(self.get_information_from_page())
-
-        self.save_json(content_list, 'fighting-games')
-        logger.info('Scrape complete! Exiting...')
-        self.driver.quit()
+                    content_list.append(self.get_information_from_page())
+          
+            logger.info(content_list)
+            self.save_json(content_list, 'fighting-games')
+            logger.info('Scrape complete! Exiting...')
+            self.driver.quit()
 
         
 if __name__ == '__main__':     
