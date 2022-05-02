@@ -195,7 +195,12 @@ class MetaCriticScraper(Scraper):
             li.page.last_page > a'
         )
         range_final = page_value + 1
-    
+
+        # Logic to remove the current text file if it exists already 
+
+        if os.path.exists(f"{file_name}.txt"):
+            os.remove(f"{file_name}.txt")
+
         for i in range(1, range_final):
             with open(f"{file_name}.txt", 'a+') as file:
             
