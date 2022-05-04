@@ -1,25 +1,42 @@
-import csv
 import time 
-from time import perf_counter
-import os 
-import selenium
-import json 
+import os
+from numpy import number
+# from numpy import number 
 # from selenium import webdriver 
-from selenium.webdriver import Chrome
-from selenium.webdriver import ChromeOptions
 from selenium.webdriver.common.by import By
-from urllib3 import Timeout
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import TimeoutException
-from selenium.common.exceptions import NoSuchElementException
-import urllib.request
+from urllib3 import Timeout
 from Scraper import Scraper
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from tqdm import tqdm
+from alive_progress import alive_bar 
 import uuid
-import sys
-sys.path.append("/media/blair/Fast Partition/My Projects/student_projects/Metacritic_Webscraper-/MetaCritic_Scraper")
+import logging 
 
+
+# sys.path.append("/media/blair/Fast Partition/My Projects/student_projects/Metacritic_Webscraper-/MetaCritic_Scraper")
+
+log_filename = "logs/metacritic_scraper.log"
+if not os.path.exists(log_filename):
+    os.makedirs(os.path.dirname(log_filename), exist_ok=True)
+
+logger = logging.getLogger(__name__)
+
+# Set the default level as DEBUG 
+logger.setLevel(logging.DEBUG)
+
+# Format the logs by time, filename, function_name, level_name and the message
+format = logging.Formatter(
+    '%(asctime)s:%(filename)s:%(funcName)s:%(levelname)s:%(message)s'
+)
+file_handler = logging.FileHandler(log_filename)
+
+# Set the formatter to the variable format
+
+file_handler.setFormatter(format)
+
+logger.addHandler(file_handler)
 
 class MetaCriticScraper(Scraper): 
 
@@ -48,12 +65,6 @@ class MetaCriticScraper(Scraper):
             'Developer': '//li[@class="summary_detail developer"]/span[2]/a', 
             'Description': './/li[@class="summary_detail product_summary"]' } 
 
-        #NEW Category Dict to use in choose_category method? 
-        self.category_dict = {
-            'Game Xpath': '//*[@id="primary_nav_item_games"]/nav/div/div[1]/div[2]/ul/li[1]/a',
-            'Music Xpath': '//*[@id="primary_nav_item_music"]/nav/div[2]/ul/li[1]/a',
-            'TV Xpath': '//*[@id="primary_nav_item_tv"]/nav/div/div[1]/div[2]/ul/li[1]/a', 
-            'Movie Xpath': '//*[@id="primary_nav_item_movies"]/nav/div/div[1]/div[2]/ul/li[6]/a'}
 
         self.information_dict =  {}
 
@@ -66,23 +77,11 @@ class MetaCriticScraper(Scraper):
         '''
         Currently works for games and music pages 
 
-        '''
-        # Choose the game category from the list
-        # TODO: This method should choose a category based on what is passed into the argument of the function 
-
-        # Make a function which goes to the page of a section based on what is passed 
-        # Into the argument of the function. 
-
-        # Get a list of hrefs of the pages that you want to go to. 
+        ''' 
 
         # List of hrefs to visit 
         href_list = [
-            "https://www.metacritic.com/game",
-            "https://www.metacritic.com/music",
-            "https://www.metacritic.com/tv", 
-            "https://www.metacritic.com/browse/movies/score/metascore/all/filtered?sort=desc"
-            
-
+            "https://www.metacritic.com/game"
         ]
         if category_selection == 'game':
             try:
@@ -91,17 +90,9 @@ class MetaCriticScraper(Scraper):
                 self.driver.refresh()
                 time.sleep(3)
                 self.driver.get(href_list[0])
-        else:
-            try:
-                self.driver.get(href_list[1])
-            except TimeoutException:
-                self.driver.refresh()
-                time.sleep(3)
-                self.driver.get(href_list[1])
-        
-        # Game Xpath: '//*[@id="primary_nav_item_games"]/nav/div/div[1]/div[2]/ul/li[1]/a'
       
-        print(f'Navigating to: {category_selection}')
+          
+        logger.info(f'Navigating to: {category_selection}')
         return category_selection 
 
 
@@ -122,36 +113,32 @@ class MetaCriticScraper(Scraper):
             list_of_genre_links.append(item.get_attribute('href'))
             list_of_genres.append(item.text)
 
-        print(list_of_genre_links)
-        print(list_of_genres)
+        logger.info(list_of_genre_links)
+        logger.info(f'Here are the list of genres: {list_of_genres}')
         return list_of_genre_links
 
    
 
     def click_next_page(self, page):
-
-        #TODO: find a way to generalise this code for all pages on the website. 
-        # Maybe make another method to check the last page? 
     
         next_page_element = self.driver.find_element(
             By.XPATH, 
             f'//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[{page}]/*'
         )
-        # //*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[7]/a
         next_page_url = next_page_element.get_attribute('href')
        
         self.driver.get(str(next_page_url))
-        print(page)
-        print(type(page))
+        logger.debug(page)
+        logger.debug(type(page))
         # print(next_page_url)
-        print('navigating to next page')
+        logger.info('navigating to next page')
         
         return next_page_url
            
     
     def get_information_from_page(self):   
         
-    
+        page_information_dict = {}
         #TODO: This could be a staticmethod? 
         for key,xpath in self.xpaths_dict.items():
          
@@ -168,162 +155,114 @@ class MetaCriticScraper(Scraper):
                         if collapse_button:
                             collapse_button.click()
                             expanded_description = web_element.find_element(By.XPATH, './/span[@class="blurb blurb_expanded"]')
-                            self.information_dict[key] = expanded_description.text
+                            page_information_dict[key] = expanded_description.text
                     # If there is no expand button inside the description field, set the key of information dict to the 
                     # text of the xpath found. 
                     except:
                         summary = web_element.find_element(By.XPATH, xpath)
-                        self.information_dict[key] = summary.text
+                        page_information_dict[key] = summary.text
 
                    
                 else:
                     # Further logic for special cases: UUID and the Link_to_Page.
                     if key == 'UUID':
-                        self.information_dict[key] = xpath
+                        page_information_dict[key] = str(uuid.uuid4())
 
                     elif key == 'Link_to_Page':
                         web_element = self.driver.find_element(By.XPATH, xpath).get_attribute('href') 
-                        self.information_dict[key] = web_element
+                        page_information_dict[key] = web_element
 
                         
                     else:
                         web_element = self.driver.find_element(By.XPATH, xpath) 
-                        self.information_dict[key] = web_element.text 
+                        page_information_dict[key] = web_element.text 
 
             except:     
-                self.information_dict[key] = 'Null'
-
+                page_information_dict[key] = 'Null'
+                logger.warning('Null value recorded. Please check the xpath or webpage')
         
+        logger.info('Dictionary Created')
+        logger.info(page_information_dict)
+        print(page_information_dict)
+        return page_information_dict
 
-        print(self.information_dict)
-        return self.information_dict
-
-        # if conditionA:
-            # Code that executes when 'conditionA' is True
-
-            # if conditionB:
-                # Code that runs when 'conditionA' and
-                # 'conditionB' are both True
 
     
-    def process_page_links(self):
-        #TODO: Make this method return a list of links for all pages to visit.
-        #TODO: Look at the logic behind click_next_page method.
-        self.accept_cookies('//button[@id="onetrust-accept-btn-handler"]') 
+    def process_page_links(self, file_name : str):
+    
         list_of_all_pages_to_visit = []
-        
-        for url in self.choose_genre():
-            list_of_all_pages_to_visit.append(url)
-            self.driver.get(url) 
-            try:
-                page_value = self.collect_number_of_pages(
-                    '#main_content > div.browse.new_releases > div.content_after_header > \
-                    div > div.next_to_side_col > div > div.marg_top1 > div > div > div.pages > ul > \
-                    li.page.last_page > a'
-                )
-                range_final = page_value + 1
-            except:
-                #self.driver.implicitly_wait(5)
-                self.extract_the_page_links('//a[@class="title"]', 'href')
-                range_final = 0
-            for i in range(1, range_final):
-                with open("list_of_links.txt", 'a+') as file:
-                #self.driver.implicitly_wait(5)
-                    list_of_all_pages_to_visit.extend(self.extract_the_page_links('//a[@class="title"]', 'href'))
-                    while len(list_of_all_pages_to_visit) > 0: 
-                        url = list_of_all_pages_to_visit.pop(0)
-                        file.write(str(url))
-                        file.write('\n')
-                    try:
-                        (WebDriverWait(self.driver, 1)
-                        .until(EC.element_to_be_clickable(
-                            (By.XPATH, '//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[1]/span[2]/a/span')
-                            )
-                        )).click()
-                        print('navigating to next page')
-                    except TimeoutException:
-                        if range_final:
-                            break
-                    #TODO: During this loop, the outputs of the links are stored inside a text file to be called when running the sample_scraper method 
-                
-
-
-
-    def sample_scraper(self):
-        # Goes to Games > Games Home > 'Search by Genre': Fighting > Scrapes 6 pages of content 
-        self.accept_cookies('//button[@id="onetrust-accept-btn-handler"]')
-        genre_list = self.choose_genre()
-        self.driver.get(genre_list[2])
-        
-        #TODO populate the all_pages_list with hrefs from ALL pages in the 'Games' section of the website. 
-        
-        all_pages_list = []
-        
-        # filter_list = self.apply_filter_list(
-        # '//ul[@class="dropdown dropdown_open"]//li/a',
-        # '//div[@class="mcmenu dropdown style2 genre"]'
-    # )
-
-        # Collect the number of pages on the page to use in range function
-
+      
         page_value = self.collect_number_of_pages(
             '#main_content > div.browse.new_releases > div.content_after_header > \
             div > div.next_to_side_col > div > div.marg_top1 > div > div > div.pages > ul > \
             li.page.last_page > a'
         )
-        # Set the final range to +1 more to satisfy the range function
-
         range_final = page_value + 1
-        # for page in range(2,rangefinal):
-        for page in range(2,range_final):
-            all_pages_list.extend(self.extract_the_page_links('//a[@class="title"]', 'href'))
-            time.sleep(1)
-            self.click_next_page(page)
 
-        all_pages_list.extend(self.extract_the_page_links('//a[@class="title"]', 'href'))
+        # Logic to remove the current text file if it exists already 
 
-        for url in all_pages_list:
-            time.sleep(1)
-            #TODO: use a try and except statement to catch the timeout exception. 
-            try:
-                self.driver.get(url)
-                time.sleep(2)
-            except TimeoutException:
-                time.sleep(4)
-                self.driver.refresh()
-                self.driver.get(url) 
+        if os.path.exists(f"{file_name}.txt"):
+            os.remove(f"{file_name}.txt")
+
+        for i in range(1, range_final):
+            with open(f"{file_name}.txt", 'a+') as file:
+            
+                list_of_all_pages_to_visit.extend(self.extract_the_page_links('//a[@class="title"]', 'href'))
+                while len(list_of_all_pages_to_visit) > 0: 
+                    url = list_of_all_pages_to_visit.pop(0)
+                    file.write(str(url))
+                    file.write('\n')
+                try:
+                    (WebDriverWait(self.driver, 1)
+                    .until(EC.element_to_be_clickable(
+                        (By.XPATH, '//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[1]/span[2]/a/span')
+                        )
+                    )).click()
+                    logger.info('navigating to next page')
+                except TimeoutException:
+                    if range_final:
+                        break
+                #TODO: During this loop, the outputs of the links are stored inside a text file to be called when running the sample_scraper method 
                 
-            self.get_information_from_page()
+
+
+
+    def sample_scraper(self, file_name : str):
+        # Goes to Games > Games Home > 'Search by Genre': Fighting > Scrapes 6 pages of content 
+        self.accept_cookies('//button[@id="onetrust-accept-btn-handler"]')
+        self.choose_category('game')
+        genre_list = self.choose_genre()
+        self.driver.get(genre_list[2])
+
+        self.process_page_links(file_name)
         
         
 
+        with open (f'{file_name}.txt') as file:
+            content_list = []
+
+            for line in file:
+                try:
+                    self.driver.implicitly_wait(3)
+                    self.driver.get(str(line))
+                    
+                    content_list.append(self.get_information_from_page())
+                    
+
+                except TimeoutException:
+                    logger.warning('Timeoutexception on this page. Retrying.')
+                    self.driver.implicitly_wait(3)
+                    self.driver.refresh()
+                    content_list.append(self.get_information_from_page())
+                
+          
+            logger.info(content_list)
+            self.save_json(content_list, 'fighting-games')
+            logger.info('Scrape complete! Exiting...')
+            self.driver.quit()
 
         
-# new syntax for driver.find_elements(By.XPATH, "xpath string")
 if __name__ == '__main__':     
-    new_scraper = MetaCriticScraper("https://www.metacritic.com/game")
-    # new_scraper.choose_genre()
-    # new_scraper.collect_page_links()
-    # new_scraper.get_information_from_page()
-    new_scraper.process_page_links()
-    # new_scraper.click_next_page()
-    # new_scraper.collect_number_of_pages()
-    # new_scraper.click_next_page_3()
-    # new_scraper.last_page()
-    # new_scraper.process_page_links()
-    # new_scraper.choose_category('music')
-    # Timing how long it takes to scrape from 100 pages 
-    # t1_start = perf_counter()
-  
-    # new_scraper.sample_scraper()
-    # t1_stop = perf_counter()
-    # print(f'Total elapsed time {round(t1_stop - t1_start)} seconds')
+    new_scraper = MetaCriticScraper("https://www.metacritic.com")
 
-# Current stats(1/01/2022): 100 pages in 226 seconds (2 minutes, 4 seconds.)
-# Current stats(27/01/2022): 500 pages in 2828 seconds (47 minutes, 8 seconds)
-# Current stats (3/02/2022): 524 pages in 1742 seconds (29 minutes)
-# Current stats (14/02/2022): 500 pages in 3145 seconds (52 minutes, 24 seconds)
-# Current stats (15/02/2022): 524 pages in 2481 seconds (41 minutes, 21 seconds)
-# Current stats (15/02/2022, 22:46pm): 524 pages in 2697 seconds (44 minutes, 57 seconds)
-# Current stats (22/03/2022): 524 pages in 2677 seconds (44 minutes, 37 seconds)
 

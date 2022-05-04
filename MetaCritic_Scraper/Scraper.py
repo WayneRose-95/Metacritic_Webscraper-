@@ -12,6 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from urllib3.exceptions import SSLError
+from user_agent import generate_user_agent
 from typing import Optional
 import time
 import urllib.request
@@ -25,9 +26,32 @@ from json import JSONEncoder
 import itertools 
 import requests
 import certifi
+import logging 
 
 
 #%%
+
+log_filename = "logs/scraper.log"
+if not os.path.exists(log_filename):
+    os.makedirs(os.path.dirname(log_filename), exist_ok=True)
+
+logger = logging.getLogger(__name__)
+
+# Set the default level as DEBUG 
+logger.setLevel(logging.DEBUG)
+
+# Format the logs by time, filename, function_name, level_name and the message
+format = logging.Formatter(
+    '%(asctime)s:%(filename)s:%(funcName)s:%(levelname)s:%(message)s'
+)
+file_handler = logging.FileHandler(log_filename)
+
+# Set the formatter to the variable format
+
+file_handler.setFormatter(format)
+
+logger.addHandler(file_handler)
+
 class Scraper: 
 
     '''
@@ -49,14 +73,17 @@ class Scraper:
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_argument('--window-size=1920,1080')
+        chrome_options.add_argument('--remote-debugging-port=9222')
+        # chrome_options.add_argument(generate_user_agent())
         caps = DesiredCapabilities().CHROME
         caps["pageLoadStrategy"] = "normal"
         self.driver =  Chrome(ChromeDriverManager().install(), options=chrome_options, desired_capabilities=caps)
-        self.id = next(self.increasing_id)
          
     
     def land_first_page(self, page_url : str):
         home_page = self.driver.get(page_url)
+        logger.debug('Landed first page')
         return home_page
 
     def accept_cookies(self, cookies_button_xpath : str, iframe: Optional[str]=None): 
@@ -81,13 +108,13 @@ class Scraper:
                 )
             )
             accept_cookies_button.click()
-            print('The accept cookies button has been clicked')
+            logger.debug('The accept cookies button has been clicked')
 
         except NoSuchFrameException: # If it is not within a frame then find the xpath and proceed click it. 
-            print('No iframe found')
+            logger.warning('No iframe found')
             accept_cookies = self.driver.find_element(By.XPATH, cookies_button_xpath)
             accept_cookies.click()
-            print('The accept cookies button has been clicked')
+            logger.debug('The accept cookies button has been clicked')
         return True  
     
     def manipulate_search_bar(self, search_bar_xpath : str, text : str):
@@ -105,14 +132,15 @@ class Scraper:
             search_bar_element.click()
         except:
             # If it is not present, close the window. 
-            print('no search bar found')
+            logger.exception('no search bar found')
             self.driver.quit()
 
         if search_bar_element:
             search_bar_element.send_keys(text)
             search_bar_element.send_keys(Keys.ENTER)
         else:
-            raise Exception('Text failed')
+            logger.exception('Text failed')
+            raise Exception
         
         return search_bar_element, text
 
@@ -146,9 +174,8 @@ class Scraper:
         attribute : str = 'href' or 'src' or 'alt'
     ):
         
-        temp = True 
-        while temp is True:
-            try:
+    
+        try:
         # find the container with the links
                 page_container = (
                     WebDriverWait(self.driver, 0.5)
@@ -157,10 +184,10 @@ class Scraper:
                         )
                     )
                 )
-                temp = False 
-            except Exception:
-                print('entered exception')
-                continue
+                
+        except Exception:
+            logger.exception('entered exception')
+              
   
         page_links_list = []
         page_counter = 0 
@@ -180,11 +207,11 @@ class Scraper:
     def collect_number_of_pages(self, last_page_number : str ):
         try:
             last_page_number_element = (self.driver.find_element(By.CSS_SELECTOR, last_page_number).text)
-            print(last_page_number_element)
-            print(f"Max Page = {last_page_number_element}..")
+            logger.debug(last_page_number_element)
+            logger.info(f"Max Page = {last_page_number_element}..")
             last_page_number = int(last_page_number_element)
         except NoSuchElementException:
-            print('Element not found. Exiting...')
+            logger.exception('Element not found. Exiting...')
 
         return last_page_number
                
@@ -194,7 +221,8 @@ class Scraper:
             container = self.driver.find_element(By.XPATH, container_xpath)
             print(container)
         except:
-            raise Exception('There was no element')
+            logger.exception('There was no element. Please check your xpath')
+            raise Exception
 
     def apply_filter_list(self, filter_container_xpath : str , filter_button=None):
 
@@ -261,62 +289,61 @@ class Scraper:
     # Refactor this so that the image saves within a directory 
     # Then refactor it to save multiple images inside a directory. 
 
-    def save_image_links(self, image_name_xpath, image_src_xpath):
-        '''
-        Method to save image srcs inside a dictionary with unique IDs. 
+    def save_image_links(
+        self, 
+        sub_category_name: str,
+        image_container_xpath : str
+    ):
+        """
+        Method to download every product image (jpg format).
+    
+        Parameters: 
+            sub_category_name (str): The name of the sub-category 
 
-        Returns:
-        self.image_dict = A Dictionary which contains data on the image. 
-        '''
+            image_container_xpath (str): The name of the container for the xpaths 
+
+
+        """
+
+        #TODO: The scraper breaks on random pages when it tries to get images. Why? 
+
+        image_srcs = self.extract_the_page_links(image_container_xpath, 'src')
+        sub_category_name = self.extract_the_page_links(image_container_xpath, 'alt')
+        
+        while len(sub_category_name) > 0:
+            image_string = sub_category_name.pop(0)
+            strip_irregular_characters = image_string.replace(":", "")
+            image_name = strip_irregular_characters[:200]
+            logger.info(f'Image name stripped from list')
+
+        while len(image_srcs) > 0:
+            image_link = image_srcs.pop(0)
+            logger.info(f'Image link stripped from list')
+            
+                
         self.image_dict = {
-            'ID': [],
-            'Friendly_ID': [],
-            'Image_Name': [],
-            'Image_Link': []
+            
         }
 
-        # Find all of the srcs and alt tags from the page 
-        image_names = self.extract_the_page_links(image_name_xpath, 'alt')
-        image_links = self.extract_the_page_links(image_src_xpath, 'src')
-
-        #TODO: How to split elements from a list? 
-        
-        # Append the split src urls to a new list to populate Friendly_ID field 
-            
-
         self.image_xpath_dict = {
-            'ID': "",
-            'Friendly_ID': f"{self.increasing_id}",
-            'Image_Name': f'{image_names}',
-            'Image_Link' :f'{image_links}'
+            'UUID': "",
+            'Image_Name': f'{image_name}',
+            'Image_Link' :[f'{image_link}']
         }
        
     
         for key,value in self.image_xpath_dict.items():
             try:
-                if key == "ID":
+                if key == "UUID":
                     self.image_dict[key] = str(uuid.uuid4())
-                else:
-                       
+                elif key == 'Image_Link':
+                    self.image_dict[key] = value
+                else:                      
                     self.image_dict[key] = value
             except:
                 self.image_dict[key] = 'Null'
-        
-
-        if not os.path.exists('images'):
-            os.makedirs('images')
-            try:
-                for i,link in enumerate(image_names):
-                    with open(f'images/{link}_{i}.jpg', "wb") as file:
-                        img = self.driver.find_element(By.XPATH, image_src_xpath)
-                        time.sleep(3)
-                        file.write(img.screenshot_as_png)
-                        time.sleep(3)
-            except:
-                print('There was an error')
        
-       
-        print(self.image_dict)
+        logger.debug(self.image_dict)
         return self.image_dict
 
     def save_json(self, all_products_dictionary, sub_category_name):
@@ -328,6 +355,7 @@ class Scraper:
         with open(f'json-files/{file_name}', mode='a+', encoding='utf-8-sig') as f:
             json.dump(file_to_convert, f, indent=4, ensure_ascii=False) 
             f.write('\n')
+        logger.debug('.json file created')
         return True
      
                  
