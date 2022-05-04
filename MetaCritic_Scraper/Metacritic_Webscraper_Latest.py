@@ -1,5 +1,6 @@
 import time 
 import os
+from numpy import number
 # from numpy import number 
 # from selenium import webdriver 
 from selenium.webdriver.common.by import By
@@ -9,8 +10,10 @@ from Scraper import Scraper
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from tqdm import tqdm
+from alive_progress import alive_bar 
 import uuid
 import logging 
+
 
 # sys.path.append("/media/blair/Fast Partition/My Projects/student_projects/Metacritic_Webscraper-/MetaCritic_Scraper")
 
@@ -237,18 +240,21 @@ class MetaCriticScraper(Scraper):
 
         with open (f'{file_name}.txt') as file:
             content_list = []
+
             for line in file:
                 try:
                     self.driver.implicitly_wait(3)
                     self.driver.get(str(line))
                     
                     content_list.append(self.get_information_from_page())
-                   
+                    
+
                 except TimeoutException:
                     logger.warning('Timeoutexception on this page. Retrying.')
                     self.driver.implicitly_wait(3)
                     self.driver.refresh()
                     content_list.append(self.get_information_from_page())
+                
           
             logger.info(content_list)
             self.save_json(content_list, 'fighting-games')

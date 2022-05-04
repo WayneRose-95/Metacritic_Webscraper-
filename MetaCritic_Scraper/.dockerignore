@@ -1,0 +1,17 @@
+# Ignore this fie 
+setup.py 
+
+# Ignore this file 
+testing_module.ipynb
+
+# Ignore this file 
+test_scraper_output.txt 
+
+# Ignore this file 
+test_MetacriticScraper.py 
+
+# Ignore this file 
+dist 
+
+# Ignore this file 
+Fighting_Games_Metacritic_Webscraper.egg-info
