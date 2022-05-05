@@ -322,7 +322,7 @@ class Scraper:
             logger.info(f'Image link stripped from list')
             
                 
-        self.image_dict = {}
+        image_dict = {}
 
         self.image_xpath_dict = {
             'UUID': "",
@@ -334,16 +334,16 @@ class Scraper:
         for key,value in self.image_xpath_dict.items():
             try:
                 if key == "UUID":
-                    self.image_dict[key] = str(uuid.uuid4())
+                    image_dict[key] = str(uuid.uuid4())
                 elif key == 'Image_Link':
-                    self.image_dict[key] = value
+                    image_dict[key] = value
                 else:                      
-                    self.image_dict[key] = value
+                    image_dict[key] = value
             except:
-                self.image_dict[key] = 'Null'
+                image_dict[key] = 'Null'
        
-        logger.debug(self.image_dict)
-        return self.image_dict
+        logger.debug(image_dict)
+        return image_dict
 
     def save_json(
         self, 
