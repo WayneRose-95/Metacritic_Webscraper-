@@ -27,7 +27,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: .MetaCritic_Scraper/Dockerfile
+          file: ./MetaCritic_Scraper/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/metacritic_scraper:latest
 
