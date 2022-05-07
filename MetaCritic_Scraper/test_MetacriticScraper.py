@@ -116,7 +116,7 @@ class ASOS_Webscraper_Tests(unittest.TestCase):
     def test_collect_page_links(self):
         test_page = "https://www.metacritic.com/browse/albums/genre/date/electronic"
         self.scraper.driver.get(test_page)
-        test_input = self.scraper.extract_the_page_links('//a[@class="title"]', 'href')
+        test_input = self.scraper.extract_page_links('//a[@class="title"]', 'href')
 
         self.assertIsInstance(test_input, list)
     #     self.assertEqual(len(test_input), 100)

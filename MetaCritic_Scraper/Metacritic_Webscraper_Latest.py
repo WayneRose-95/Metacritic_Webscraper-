@@ -207,7 +207,7 @@ class MetaCriticScraper(Scraper):
         for i in range(1, range_final):
             with open(f"{file_name}.txt", 'a+') as file:
             
-                list_of_all_pages_to_visit.extend(self.extract_the_page_links('//a[@class="title"]', 'href'))
+                list_of_all_pages_to_visit.extend(self.extract_page_links('//a[@class="title"]', 'href'))
                 while len(list_of_all_pages_to_visit) > 0: 
                     url = list_of_all_pages_to_visit.pop(0)
                     file.write(str(url))
