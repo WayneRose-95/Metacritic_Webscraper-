@@ -356,6 +356,7 @@ class Scraper:
         file_to_convert = all_products_dictionary
         file_name = f'{sub_category_name}-details.json'
         # Logic for uploading to cloud servers. 
+        # If the user sets s3_upload to True, perform the following:
         if s3_upload is True:
             s3_client = boto3.client('s3')
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -367,6 +368,8 @@ class Scraper:
                     s3_client.upload_file(f'{temp_dir}/{file_name}', bucket_name, f'json_files/{file_name}')       
             if os.path.exists(temp_dir):
                 shutil.rmtree(temp_dir)
+
+            logger.debug(f'Files uploaded to {bucket_name}, please check your S3_Bucket')
         # If the user is working locally then save the .json file locally.        
         elif s3_upload is False:
             if not os.path.exists('json-files'):
@@ -374,7 +377,7 @@ class Scraper:
             with open(f'json-files/{file_name}', mode='a+', encoding='utf-8-sig') as f:
                 json.dump(file_to_convert, f, indent=4, ensure_ascii=False) 
                 f.write('\n')
-            logger.debug('.json file created')
+            logger.debug('.json file created locally.')
       
         return True
 
