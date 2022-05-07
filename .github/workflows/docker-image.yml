@@ -3,7 +3,7 @@ name: ci
 on:
   push:
     branches:
-      - 'docker_and_cloud'
+      - 'main'
   workflow_dispatch:
   
 jobs:
@@ -27,8 +27,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./Dockerfile
+          file: .MetaCritic_Scraper/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/metacritic_scraper:latest
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/metacritic_scraper:latest
 
