@@ -129,3 +129,6 @@ dmypy.json
 .pyre/
 
 MetaCritic_Scraper/logs 
+*ipynb
+
+MetaCritic_Scraper/cloud_upload.py 

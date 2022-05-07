@@ -204,9 +204,9 @@ class Scraper:
         return page_links_list
 
 
-    def collect_number_of_pages(self, last_page_number : str ):
+    def collect_number_of_pages(self, last_page_number_xpath : str ):
         try:
-            last_page_number_element = (self.driver.find_element(By.CSS_SELECTOR, last_page_number).text)
+            last_page_number_element = (self.driver.find_element(By.CSS_SELECTOR, last_page_number_xpath).text)
             logger.debug(last_page_number_element)
             logger.info(f"Max Page = {last_page_number_element}..")
             last_page_number = int(last_page_number_element)
@@ -284,6 +284,7 @@ class Scraper:
         """
         self.s3_client = boto3.client('s3')
         return self.s3_client
+    
 
     #TODO: Scraper only saves one image without a directory.
     # Refactor this so that the image saves within a directory 
@@ -321,9 +322,7 @@ class Scraper:
             logger.info(f'Image link stripped from list')
             
                 
-        self.image_dict = {
-            
-        }
+        image_dict = {}
 
         self.image_xpath_dict = {
             'UUID': "",
@@ -335,29 +334,54 @@ class Scraper:
         for key,value in self.image_xpath_dict.items():
             try:
                 if key == "UUID":
-                    self.image_dict[key] = str(uuid.uuid4())
+                    image_dict[key] = str(uuid.uuid4())
                 elif key == 'Image_Link':
-                    self.image_dict[key] = value
+                    image_dict[key] = value
                 else:                      
-                    self.image_dict[key] = value
+                    image_dict[key] = value
             except:
-                self.image_dict[key] = 'Null'
+                image_dict[key] = 'Null'
        
-        logger.debug(self.image_dict)
-        return self.image_dict
+        logger.debug(image_dict)
+        return image_dict
 
-    def save_json(self, all_products_dictionary, sub_category_name):
+    def save_json(
+        self, 
+        all_products_dictionary : list or dict, 
+        sub_category_name : str, 
+        bucket_name : Optional[str]=None,
+        s3_upload : Optional[Boolean]=None
+    ):
+
         file_to_convert = all_products_dictionary
         file_name = f'{sub_category_name}-details.json'
+        # Logic for uploading to cloud servers. 
+        # If the user sets s3_upload to True, perform the following:
+        if s3_upload is True:
+            s3_client = boto3.client('s3')
+            with tempfile.TemporaryDirectory() as temp_dir:
+                with open(f'{temp_dir}/{file_name}', mode='a+', encoding='utf-8-sig') as f:
+                    json.dump(file_to_convert, f, indent=4, ensure_ascii=False) 
+                    f.write('\n') 
+                    f.flush()
+                    time.sleep(3)
+                    s3_client.upload_file(f'{temp_dir}/{file_name}', bucket_name, f'json_files/{file_name}')       
+            if os.path.exists(temp_dir):
+                shutil.rmtree(temp_dir)
 
-        if not os.path.exists('json-files'):
-            os.makedirs('json-files')
-        with open(f'json-files/{file_name}', mode='a+', encoding='utf-8-sig') as f:
-            json.dump(file_to_convert, f, indent=4, ensure_ascii=False) 
-            f.write('\n')
-        logger.debug('.json file created')
+            logger.debug(f'Files uploaded to {bucket_name}, please check your S3_Bucket')
+        # If the user is working locally then save the .json file locally.        
+        elif s3_upload is False:
+            if not os.path.exists('json-files'):
+                os.makedirs('json-files')
+            with open(f'json-files/{file_name}', mode='a+', encoding='utf-8-sig') as f:
+                json.dump(file_to_convert, f, indent=4, ensure_ascii=False) 
+                f.write('\n')
+            logger.debug('.json file created locally.')
+      
         return True
-     
+
+
                  
     
 
