@@ -29,6 +29,7 @@ import certifi
 import logging
 import ssl
 import certifi
+import mimetypes 
 
 
 #%%
@@ -261,8 +262,14 @@ class Scraper:
                 gameimage = open(f'{image_path}/{image_name}.{i}.jpg', 'wb')
                 for chunk in imagerequest.iter_content(1024):
                     gameimage.write(chunk)
+                # Guess the image type using mimetypes library. Return the first element of the tuple. 
+                check_image_type = mimetypes.guess_type(f'{image_path}/{image_name}.{i}.jpg')[0]
+                logger.debug(f'Image type is {check_image_type}')
                 gameimage.close()
                 logger.info(f"Game image for {game_name} is now avaliable in image path.")
+                #TODO: Import mimetypes and validate the image file 
+            return check_image_type  
+
 
         except SSLError:
             ssl._create_default_https_context(cafile=certifi.where())
@@ -273,6 +280,11 @@ class Scraper:
                 os.makedirs(image_path)
             for i, src in enumerate(src_list):
                 urllib.request.urlretrieve(src, f"{image_path}/{image_name}.{i}.jpg")
+            # Guess the image type using mimetypes library. Return the first element of the tuple.
+            check_image_type = mimetypes.guess_type(f'{image_path}/{image_name}.{i}.jpg')[0]
+            logger.debug(f'Image type is {check_image_type}')
+            return check_image_type
+            
         except Exception as error:
             logger.critical(f"Unexpected exception found as: {error}")
             logger.exception(error)
